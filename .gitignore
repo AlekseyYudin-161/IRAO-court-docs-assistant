@@ -1,0 +1,41 @@
+# --- рабочие артефакты пайплайна ---
+work/                 # кэш OCR, рендеры страниц, промежуточные doc.json
+*.log
+tmp/
+
+# --- секреты и локальные настройки ---
+.env
+.env.*
+!.env.example
+
+# --- модели и большие бинарники (качаются скриптом, не коммитятся) ---
+models/
+*.gguf
+*.onnx
+*.bin
+*.safetensors
+*.traineddata
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- IDE и ОС ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Streamlit / Docker ---
+.streamlit/secrets.toml
+
+# --- Что НЕ игнорируем (напоминание): data/ и out/ коммитятся ---
+!data/
+!out/
