@@ -1,0 +1,166 @@
+{
+  "doc_id": "ocr_014",
+  "source_type": "pdf",
+  "file": "ocr/writs_scan/ocr_014.pdf",
+  "table": "ocr",
+  "doc_type": "ИЛ",
+  "doc_subtype": null,
+  "fields": {
+    "улица": {
+      "value": "Примерная ул.",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дом": {
+      "value": "24",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "кв": {
+      "value": "119",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "фамилия": {
+      "value": "Шаблонникова",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "имя": {
+      "value": "Вера",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "отчетство": {
+      "value": "Андреевна",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "фио": {
+      "value": "Шаблонникова Вера Андреевна",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дата рождения": {
+      "value": "1931-02-17",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "паспорт": {
+      "value": "",
+      "evidence": null,
+      "confidence": 0.0,
+      "method": "gold",
+      "reason": "NOT_IN_TEXT"
+    },
+    "снилс": {
+      "value": "",
+      "evidence": null,
+      "confidence": 0.0,
+      "method": "gold",
+      "reason": "NOT_IN_TEXT"
+    },
+    "инн": {
+      "value": "",
+      "evidence": null,
+      "confidence": 0.0,
+      "method": "gold",
+      "reason": "NOT_IN_TEXT"
+    },
+    "дело_номер": {
+      "value": "2-86322/2020",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дело_дата": {
+      "value": "2020-12-09",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "период_дз_начало": {
+      "value": "2019-09-03",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "период_дз_оконч": {
+      "value": "2020-05-04",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_осн": {
+      "value": "13961.58",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_пени": {
+      "value": "374.70",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_пошлина": {
+      "value": "266.66",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "соответчики_кол-во": {
+      "value": "3",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "соответчики_фио": {
+      "value": "Шаблонниковой Веры Андреевны, Примерновой Василисы Филипповны, Примернова Марка Леонтьевича",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    }
+  },
+  "extra": {},
+  "route": {
+    "lawyer": {
+      "level": "L3",
+      "reason_codes": [],
+      "basis": null,
+      "deadline": null,
+      "evidence": null
+    },
+    "review": {
+      "flags": [],
+      "evidence": []
+    }
+  },
+  "timings_ms": {},
+  "pipeline_version": "v2.4"
+}
