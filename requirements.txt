@@ -1,0 +1,17 @@
+dependency-injector==4.49.1
+fastapi==0.142.2
+natasha==1.6.0
+opencv-python==5.0.0.93
+pdf2image==1.17.0
+pillow==12.3.0
+pydantic==2.13.5
+pymorphy2==0.9.1
+pypdfium2==5.13.0
+pytesseract==0.3.13
+python-dotenv==1.2.3
+python-multipart==0.0.32
+setuptools==80.10.2
+torch==2.14.1
+typing_extensions==4.16.0
+uvicorn==0.54.0
+yargy==0.16.0
