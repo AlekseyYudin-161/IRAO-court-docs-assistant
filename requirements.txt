@@ -1,17 +1,34 @@
-dependency-injector==4.49.1
-fastapi==0.142.2
-natasha==1.6.0
-opencv-python==5.0.0.93
-pdf2image==1.17.0
-pillow==12.3.0
+# --- ядро (тимлид): контракт, LLM-клиент, письмо, оркестратор, акты ---
 pydantic==2.13.5
-pymorphy2==0.9.1
-pypdfium2==5.13.0
-pytesseract==0.3.13
+openai==3.22.1
 python-dotenv==1.2.3
-python-multipart==0.0.32
-setuptools==80.10.2
-torch==2.14.1
-typing_extensions==4.16.0
-uvicorn==0.54.0
+pytest==9.1.1
+pymupdf==1.28.2                     # рендер PDF и текстовый слой: акты (src/acts), PDF-ветка
+
+# --- XML-ветка + правила (junior ML) ---
+lxml==6.1.3
+
+# --- PDF-ветка / OCR (middle ML) ---
+pytesseract==0.3.13
+opencv-python-headless==5.0.0.93   # deskew, Otsu; headless — без GUI-зависимостей, работает на VPS
+numpy==2.5.3
+pillow==12.3.0
+pymorphy2==0.9.1                    # TODO middle ML: шим на pymorphy3 (2.x падает на Python ≥ 3.11) или заменить
+natasha==1.6.0
 yargy==0.16.0
+pdf2image==1.17.0                   # TODO middle ML: требует системный poppler; предпочтительно pymupdf, убрать после согласования
+pypdfium2==5.13.0                   # TODO middle ML: дубль pymupdf, убрать после согласования
+torch==2.11.0                       # TODO middle ML: назвать модель, которой нужен torch, иначе убрать (~2 ГБ на каждую установку)
+
+# --- API-обёртка (middle ML, опционально; ядро работает без сервера) ---
+fastapi==0.142.2
+uvicorn==0.54.0
+python-multipart==0.0.32
+dependency-injector==4.49.1
+
+# --- экспорт, scorer, отчёт (junior BI/DA) ---
+pandas==2.3.3
+openpyxl==3.1.5
+
+# --- UI (junior дизайнер) ---
+streamlit==1.64.0
