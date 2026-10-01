@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.core.columns import OCR_FIELDS, XML_FIELDS
+from src.core.columns import ACT_FIELDS, OCR_FIELDS, XML_FIELDS
 
 Reason = Literal["NOT_IN_TEXT", "ANCHOR_NOT_FOUND", "OCR_UNREADABLE",
                  "VALIDATOR_FAILED", "LLM_DISAGREE", "LLM_DISABLED", "LLM_FALLBACK_CANDIDATE"]
@@ -47,7 +47,7 @@ class Doc(BaseModel):
     doc_id: str
     source_type: Literal["xml", "pdf"]
     file: str                                       # путь как в разметке: fssp/O_IP_ACT_END_END/fssp_001.xml
-    table: Literal["xml", "ocr"]
+    table: Literal["xml", "ocr", "acts"]
     doc_type: str                                   # постановление ФССП | приказ | приказ эл | ИЛ | ИЛ эл | unknown
     doc_subtype: str | None = None                  # код DocType для XML
     fields: dict[str, FieldValue]
@@ -58,7 +58,7 @@ class Doc(BaseModel):
 
     @model_validator(mode="after")
     def _all_fields_present(self) -> Doc:
-        expected = XML_FIELDS if self.table == "xml" else OCR_FIELDS
+        expected = {"xml": XML_FIELDS, "ocr": OCR_FIELDS, "acts": ACT_FIELDS}[self.table]
         missing = [c for c in expected if c not in self.fields]
         if missing:
             raise ValueError(f"{self.doc_id}: в fields нет столбцов {missing}")
