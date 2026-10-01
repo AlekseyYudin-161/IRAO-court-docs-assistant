@@ -1,6 +1,7 @@
 """Списки столбцов выходных таблиц — читаются из data/templates/, не редактировать руками."""
 
 from __future__ import annotations
+
 import csv
 from pathlib import Path
 
@@ -27,4 +28,8 @@ CLASS_TO_FOLDER = {
     "ИЛ": "writs_scan",
     "ИЛ эл": "writs_electronic",
 }
+
 FOLDER_TO_CLASS = {v: k for k, v in CLASS_TO_FOLDER.items()}
+
+# Судебные акты (data/acts/): в шаблоны таблиц не входят, нужны для реестра и письма
+ACT_FIELDS: list[str] = ["суд", "вид_акта", "дело_номер", "дело_дата"]
