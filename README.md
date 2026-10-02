@@ -14,7 +14,7 @@
 
 ## Быстрый старт
 
-Требования: Python 3.11, Tesseract с языком `rus`, Ollama (опционально — без неё всё работает с `--no-llm`), ~2 ГБ на диске без модели, +5 ГБ с моделью `qwen3:8b`.
+Требования: Python 3.10 + (проверено на 3.12), Tesseract с языком `rus`, Ollama (опционально — без неё всё работает с `--no-llm`), ~2 ГБ на диске без модели, +5 ГБ с моделью `qwen3:8b`.
 
 **Через Makefile (macOS / Linux / Windows с make):**
 
@@ -32,7 +32,7 @@ make ui             # Streamlit на http://localhost:8501
 
 ```bash
 # macOS / Linux
-python3.11 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python scripts/check_env.py --pull-model qwen3:8b
@@ -44,7 +44,7 @@ streamlit run src/ui/app.py
 
 ```powershell
 # Windows (PowerShell)
-py -3.11 -m venv .venv; .venv\Scripts\Activate.ps1
+py -3.12 -m venv .venv; .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 copy .env.example .env
 python scripts\check_env.py --pull-model qwen3:8b
