@@ -1,5 +1,9 @@
 # --- рабочие артефакты пайплайна ---
-work/                 # кэш OCR, рендеры страниц, промежуточные doc.json
+# кэш OCR, рендеры страниц, промежуточные doc.json
+work/
+# пробные прогоны                 
+out/examples/
+out/acts/
 *.log
 tmp/
 
@@ -37,5 +41,3 @@ Thumbs.db
 .streamlit/secrets.toml
 
 # --- Что НЕ игнорируем (напоминание): data/ и out/ коммитятся ---
-!data/
-!out/
