@@ -26,7 +26,7 @@ class NERService:
         self._snils_number_extractor = SnilsNumberExtractor()
         self._tin_extractor = TINExtractor()
 
-    def extract_entities(self, ocr_results, file_name: str) -> ExtractedEntitiesDTO:
+    def extract_entities(self, ocr_results, file_name: str,document_type: str = "") -> ExtractedEntitiesDTO:
         #  Удаление типичных ошибок и соединение вычлененных текстов
         normalized_group = [
             self._text_utils.normalize_text(item["recognized_text"])
@@ -50,18 +50,8 @@ class NERService:
         snils_number = self._snils_number_extractor.extract(combined)
         tin_number = self._tin_extractor.extract(combined)
 
-        # document_type: str = ""
-        # file_name: str = ""
-        # names: List[str]
-        # dates: List[str]
-        # passport_number: str = ""
-        # snils_number: str = ""
-        # money: List[str]
-        # addresses: List[str]
-        # paragraph_text: str = ""
-
         return ExtractedEntitiesDTO(
-            document_type="",
+            document_type=document_type,
             file_name=file_name,
             names=names,
             dates=dates,
@@ -73,6 +63,6 @@ class NERService:
             paragraph_text=combined,
         )
 
-    def process_all(self, ocr_results, file_name:str) -> list[ExtractedEntitiesDTO]:
-        extracted = self.extract_entities(ocr_results, file_name)
+    def process_all(self, ocr_results, file_name: str, document_type: str = "") -> list[ExtractedEntitiesDTO]:
+        extracted = self.extract_entities(ocr_results, file_name, document_type)
         return [extracted]

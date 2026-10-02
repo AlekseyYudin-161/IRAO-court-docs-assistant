@@ -2,11 +2,12 @@ from dependency_injector import containers, providers
 from backend.src.core.config import settings
 from backend.src.utils.image_utils import ImageUtils
 from backend.src.utils.text_utils import TextUtils
-from backend.src.utils.gpu_utils import GPUUtils
+from backend.src.utils.pdf_utils import PdfUtils
 
 from backend.src.services.ocr.ocr_service import OcrService
 from backend.src.services.ner.ner_service import NERService
 from backend.src.services.document_processing_service import DocumentProcessingService
+from backend.src.services.classification.document_classification import DocumentClassifier
 
 
 class Container(containers.DeclarativeContainer):
@@ -26,13 +27,15 @@ class Container(containers.DeclarativeContainer):
     # Утилиты
     image_utils = providers.Singleton(ImageUtils)
     text_utils = providers.Singleton(TextUtils)
-    gpu_utils = providers.Singleton(GPUUtils)
+    pdf_utils = providers.Singleton(PdfUtils)
 
+    document_classifier = providers.Singleton(DocumentClassifier)
 
     # Сервисы
     ocr_service = providers.Singleton(
         OcrService,
         image_utils=image_utils,
+        pdf_utils=pdf_utils,
     )
 
     ner_service = providers.Singleton(
@@ -44,4 +47,5 @@ class Container(containers.DeclarativeContainer):
         DocumentProcessingService,
         ocr_service=ocr_service,
         ner_service=ner_service,
+        classifier=document_classifier,
     )

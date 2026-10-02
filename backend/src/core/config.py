@@ -25,6 +25,8 @@ class Settings(BaseModel):
         ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".pdf"
     })
 
+    TEXT_LAYER_MIN_CHARS: int = int(os.getenv("TEXT_LAYER_MIN_CHARS", 100))
+
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True

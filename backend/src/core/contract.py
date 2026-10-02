@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from src.core.columns import ACT_FIELDS, OCR_FIELDS, XML_FIELDS
+from backend.src.core.columns import ACT_FIELDS, OCR_FIELDS, XML_FIELDS
 
 Reason = Literal["NOT_IN_TEXT", "ANCHOR_NOT_FOUND", "OCR_UNREADABLE",
                  "VALIDATOR_FAILED", "LLM_DISAGREE", "LLM_DISABLED", "LLM_FALLBACK_CANDIDATE"]

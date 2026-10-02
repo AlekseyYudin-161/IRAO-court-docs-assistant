@@ -13,8 +13,6 @@
    Уровень: L1 — срок ≤ 15 дней или в акте назначена дата («в срок до …»); L2 — иначе при наличии маркера; L3 — маркеров нет.
 """
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta

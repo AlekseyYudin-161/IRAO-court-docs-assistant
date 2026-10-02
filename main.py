@@ -1,5 +1,5 @@
 import logging
-
+from backend.src.utils import compat_pymorphy
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

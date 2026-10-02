@@ -1,5 +1,4 @@
 import re
-import pymorphy2
 from natasha import MoneyExtractor, AddrExtractor
 from .parsers.date_parser import date_parser
 from .parsers.name_parser import name_parser
@@ -9,7 +8,6 @@ from .patterns import PASSPORT_NUMBER_PATTERN, SNILS_NUMBER_PATTERN, TIN_PATTERN
 class NameExtractor:
     def __init__(self):
         self.parser = name_parser()
-        self.morph = pymorphy2.MorphAnalyzer()
 
     def extract(self, text: str) -> list[str]:
         return [

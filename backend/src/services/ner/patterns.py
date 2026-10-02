@@ -1,9 +1,9 @@
 PASSPORT_NUMBER_PATTERN = (
-    r"\d{4}\s\d{6}"
+    r"\b\d{2}\s?\d{2}[ \u00a0]\d{6}\b"
 )
 SNILS_NUMBER_PATTERN = (
-    r"/\b\d{3}-\d{3}-\d{3}\s\d{2}\b/"
+    r"\b\d{3}-\d{3}-\d{3}[\s-]\d{2}\b"
 )
 TIN_PATTERN = (
-    r"ИНН\x20*(\d{10})"
+    r"ИНН[\s:№]*(\d{12}|\d{10})\b"
 )
