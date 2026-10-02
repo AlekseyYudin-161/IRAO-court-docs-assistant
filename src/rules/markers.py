@@ -138,6 +138,15 @@ def appeal_window(operative: str) -> tuple[int | None, str | None, str | None]:
 
 
 def route_court_act(text: str, doc_date: date | None = None) -> ActRoute:
+    """Маршрут судебного акта для юриста по 10 фразам-маркерам оргов.
+
+    Ищет маркеры только в резолютивной части (после последнего «решил:/определил:/постановил:»),
+    берёт срок обжалования из текста акта и норму из «Руководствуясь статьями …».
+    Возвращает ActRoute: level (L1 — срок ≤ 15 дней или назначена дата; L2 — маркер есть;
+    L3 — маркеров нет), reason_codes ACT_*, basis, deadline (если известна doc_date),
+    evidence (предложения с маркерами и сроком), actions — что сделать юристу (для письма).
+    """
+    
     r = ActRoute()
     hits = find_markers(text)
     if not hits:
