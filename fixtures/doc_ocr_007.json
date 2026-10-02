@@ -1,0 +1,166 @@
+{
+  "doc_id": "ocr_007",
+  "source_type": "pdf",
+  "file": "ocr/orders_electronic/ocr_007.pdf",
+  "table": "ocr",
+  "doc_type": "приказ эл",
+  "doc_subtype": null,
+  "fields": {
+    "улица": {
+      "value": "Учебная ул.",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дом": {
+      "value": "128",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "кв": {
+      "value": "16",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "фамилия": {
+      "value": "Наборников",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "имя": {
+      "value": "Леонтий",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "отчетство": {
+      "value": "Миронович",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "фио": {
+      "value": "Наборников Леонтий Миронович",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дата рождения": {
+      "value": "1976-03-11",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "паспорт": {
+      "value": "8620 043011",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "снилс": {
+      "value": "",
+      "evidence": null,
+      "confidence": 0.0,
+      "method": "gold",
+      "reason": "NOT_IN_TEXT"
+    },
+    "инн": {
+      "value": "802206513928",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дело_номер": {
+      "value": "2-8836/2033",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дело_дата": {
+      "value": "2033-02-14",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "период_дз_начало": {
+      "value": "2032-03-05",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "период_дз_оконч": {
+      "value": "2033-01-02",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_осн": {
+      "value": "68326.38",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_пени": {
+      "value": "21347.34",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_пошлина": {
+      "value": "4000.00",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "соответчики_кол-во": {
+      "value": "2",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "соответчики_фио": {
+      "value": "Наборникова Леонтия Мироновича, Наборниковой Алисы Денисовны",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    }
+  },
+  "extra": {},
+  "route": {
+    "lawyer": {
+      "level": "L3",
+      "reason_codes": [],
+      "basis": null,
+      "deadline": null,
+      "evidence": null
+    },
+    "review": {
+      "flags": [],
+      "evidence": []
+    }
+  },
+  "timings_ms": {},
+  "pipeline_version": "v2.4"
+}
