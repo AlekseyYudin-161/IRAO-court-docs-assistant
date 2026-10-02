@@ -14,7 +14,7 @@ from src.core.columns import OCR_FIELDS, XML_FIELDS
 from src.core.contract import Doc, FieldValue, LawyerRoute, ReviewRoute, Route, dump
 
 ROOT = Path(__file__).resolve().parents[1]
-LABELS = ROOT / "data" / "labels"
+LABELS = ROOT / "data" / "courts_anonymized" / "labels"
 OUT = ROOT / "fixtures"
 
 MONEY = {

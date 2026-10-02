@@ -6,7 +6,7 @@ import csv
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-TEMPLATES = ROOT / "data" / "templates"
+TEMPLATES = ROOT / "data" / "courts_anonymized" / "templates"
 
 
 def _header(name: str) -> list[str]:
