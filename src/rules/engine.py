@@ -141,6 +141,9 @@ def _review(doc: Doc) -> list[tuple[str, str]]:
         out.append(("ID_CONFLICT", "; ".join(f"{c.get('field')}: {' ≠ '.join(map(str, c.get('values', [])))}"
                                               for c in conflicts)))
     missing = [c for c in REQUIRED.get(doc.table, []) if c in doc.fields and not doc.fields[c].value]
+    # правила не справились, а LLM не дозаполнила (выключена / не нашла цитату) — поле пустое, нужен человек
+    missing += [k for k, v in doc.fields.items()
+                if not v.value and v.reason == "LLM_FALLBACK_CANDIDATE" and k not in missing]
     if missing:
         out.append(("REQUIRED_FIELD_MISSING", "пусто: " + ", ".join(missing)))
     validated = set(doc.extra.get("validated", []))

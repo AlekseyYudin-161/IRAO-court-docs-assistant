@@ -154,6 +154,21 @@ def test_required_field_missing():
     assert r.review.flags == ["REQUIRED_FIELD_MISSING"] and "дело_номер" in r.review.evidence[0]
 
 
+def test_rules_failed_and_llm_did_not_fill_goes_to_review():
+    d = xml_to_doc(FSSP / "O_IP_ACT_REOPEN_CANCEL" / "fssp_013.xml", use_llm=False)   # битая дата периода
+    r = route_to_lawyer(d)
+    assert "REQUIRED_FIELD_MISSING" in r.review.flags
+    assert "date_start" in r.review.evidence[r.review.flags.index("REQUIRED_FIELD_MISSING")]
+    assert codes(r) == ["FSSP_REFUSAL_31"]                                   # маршрут юристу при этом не теряется
+
+
+def test_letter_text_fits_mailer_sentence():
+    from src.export.mailer import _reason
+    d = xml_to_doc(FSSP / "O_IP_ACT_END_END" / "fssp_001.xml", use_llm=False)
+    d.route = route_to_lawyer(d)
+    assert "действие: проверить возможность" in _reason(d) and ".." not in _reason(d) + "."
+
+
 def test_unclassified():
     d = clean_order()
     d.doc_type = "unknown"
