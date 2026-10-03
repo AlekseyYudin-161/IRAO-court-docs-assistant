@@ -14,6 +14,7 @@ from src.acts.to_doc import act_to_doc
 from src.core.columns import OCR_COLUMNS, XML_COLUMNS
 from src.core.contract import Doc, load
 from src.llm import client as llm_client
+from src.xmlbranch.to_doc import xml_to_doc
 
 load_dotenv()
 
@@ -21,7 +22,7 @@ log = logging.getLogger("run")
 
 
 def collect_docs(docs_dir: Path) -> list[Doc]:
-    """Сегодня: готовые doc_*.json + судебные акты (act_to_doc). XML/PDF-ветки подключаются сюда же по готовности."""
+    """Сегодня: готовые doc_*.json + судебные акты (act_to_doc) + XML ФССП (xml_to_doc). PDF-ветка подключается сюда же."""
 
     docs = [load(p) for p in sorted(docs_dir.glob("doc_*.json"))]
     for p in sorted(docs_dir.rglob("*.pdf")):
@@ -33,7 +34,7 @@ def collect_docs(docs_dir: Path) -> list[Doc]:
         else:
             log.info("PDF-ветка ещё не подключена, пропускаю %s", p)
     for p in sorted(docs_dir.rglob("*.xml")):
-        log.info("XML-ветка ещё не подключена, пропускаю %s", p)
+        docs.append(xml_to_doc(p))              # --no-llm уже выключил llm_client
     return docs
 
 
@@ -45,6 +46,8 @@ def run_one(path: str | Path, no_llm: bool = False) -> Doc:
         doc = load(p)
     elif p.suffix.lower() == ".pdf" and (doc := act_to_doc(p, data_root=p.parent)) is not None:
         pass
+    elif p.suffix.lower() == ".xml":
+        doc = xml_to_doc(p, use_llm=False if no_llm else None)
     else:
         raise NotImplementedError("ветки ещё не подключены — в UI используйте UI_FIXTURES=1 и fixtures/doc_*.json")
     doc.extra["no_llm"] = no_llm
