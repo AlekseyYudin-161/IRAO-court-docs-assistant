@@ -101,13 +101,14 @@ def write_report(docs: list[Doc], out: Path) -> None:
 def send_mail(docs: list[Doc], out: Path) -> None:
     """Отправка письма ответственному лицу. Реализует на шаге 6 тимлид"""
     try:
-        from src.export.mailer import send_for_doc
+        from src.export.mailer import needs_letter, send_for_doc
     except ImportError:
         log.info("mailer ещё нет — письма пропущены")
         return
     for d in docs:
-        if d.route.lawyer.level in ("L1", "L2"):
-            send_for_doc(d, out / "mail")
+        if needs_letter(d):
+            # d.extra["mail"] = … — чтобы статус отправки попал в реестр BI
+            d.extra["mail"] = send_for_doc(d, out / "mail")
 
 
 def main() -> None:
