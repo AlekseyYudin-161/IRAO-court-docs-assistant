@@ -8,9 +8,14 @@ import json
 import logging
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from src.acts.to_doc import act_to_doc
 from src.core.columns import OCR_COLUMNS, XML_COLUMNS
 from src.core.contract import Doc, load
+from src.llm import client as llm_client
+
+load_dotenv()
 
 log = logging.getLogger("run")
 
@@ -101,13 +106,14 @@ def write_report(docs: list[Doc], out: Path) -> None:
 def send_mail(docs: list[Doc], out: Path) -> None:
     """Отправка письма ответственному лицу. Реализует на шаге 6 тимлид"""
     try:
-        from src.export.mailer import send_for_doc
+        from src.export.mailer import needs_letter, send_for_doc
     except ImportError:
         log.info("mailer ещё нет — письма пропущены")
         return
     for d in docs:
-        if d.route.lawyer.level in ("L1", "L2"):
-            send_for_doc(d, out / "mail")
+        if needs_letter(d):
+            # d.extra["mail"] = … — чтобы статус отправки попал в реестр BI
+            d.extra["mail"] = send_for_doc(d, out / "mail")
 
 
 def main() -> None:
@@ -117,6 +123,8 @@ def main() -> None:
     ap.add_argument("--no-llm", action="store_true")
     ap.add_argument("--holdout", action="store_true")
     a = ap.parse_args()
+    if a.no_llm:
+        llm_client.disable()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     out = Path(a.out)
     docs = [route(d) for d in collect_docs(Path(a.docs))]
