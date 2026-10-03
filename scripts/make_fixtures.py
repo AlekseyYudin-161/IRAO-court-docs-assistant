@@ -73,7 +73,16 @@ def main() -> None:
             fields=_fields(r, OCR_FIELDS, "labels/ocr.csv"),
             route=Route(lawyer=LawyerRoute(level="L3", reason_codes=[]), review=ReviewRoute()))
 
-    for d in (d1, d2, d3):
+    # ocr_020: ИНН в карточке должника (эталон) ≠ ИНН в цитате судебного акта — README оргов, раздел про противоречия
+    r = ocr["ocr_020"]
+    d4 = Doc(doc_id="ocr_020", source_type="pdf", file=r["Файл"], table="ocr", doc_type=r["тип документа"],
+            fields=_fields(r, OCR_FIELDS, "labels/ocr.csv"),
+            extra={"conflicts": [{"field": "инн", "values": [r["инн"], "80416142465"],
+                                  "evidence": ["карточка должника", "цитата судебного акта"]}]},
+            route=Route(lawyer=LawyerRoute(level="L3", reason_codes=[]),
+                        review=ReviewRoute(flags=["ID_CONFLICT"], evidence=["инн: 862152469440 ≠ 80416142465"])))
+
+    for d in (d1, d2, d3, d4):
         dump(d, OUT / f"doc_{d.doc_id}.json")
         print("ok", d.doc_id, sum(1 for v in d.fields.values() if v.value))
 
