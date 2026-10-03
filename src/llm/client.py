@@ -78,12 +78,14 @@ def chat_json(system: str, user: str, schema: dict | None = None, retries: int =
                               "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                               "response_format": ({"type": "json_schema", "json_schema": {"name": "fields", "schema": schema}}
                                                   if schema else {"type": "json_object"})}
+    if os.getenv("LLM_REASONING_EFFORT"):
+        kwargs["reasoning_effort"] = os.getenv("LLM_REASONING_EFFORT")
     for attempt in range(retries + 1):
         t0 = time.time()
         try:
             r = client.chat.completions.create(**kwargs)
         except Exception as e:  # сервер не поднят, модель не скачана, таймаут, json_schema не поддержан
-            if schema and kwargs["response_format"]["type"] == "json_schema":
+            if schema and kwargs["response_format"]["type"] == "json_schema" and getattr(e, "status_code", None) == 400:
                 log.info("json_schema отклонён (%s) — переходим на json_object", type(e).__name__)
                 kwargs["response_format"] = {"type": "json_object"}
                 continue
