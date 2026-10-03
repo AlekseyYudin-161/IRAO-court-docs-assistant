@@ -1,4 +1,3 @@
-# src/rules/markers.py
 """Маркеры судебных актов для направления юристу (перечень организаторов от 01.10, 10 фраз).
 
 Как работает (без LLM):
@@ -56,6 +55,9 @@ WINDOW_RE = re.compile(
     r"(?:в течение|не превышающ\w+|в срок, не превышающий)\s+"
     r"(одного месяца|месяца|двух месяцев|пятнадцати дней|десяти дней|(\d{1,2})\s*дней)", re.IGNORECASE)
 UNTIL_RE = re.compile(r"в срок до\s*(\[дата\]|\d{2}\.\d{2}\.\d{4})", re.IGNORECASE)
+# «в срок до …» считаем процессуальным сроком, только если предложение обращено к суду/заявителю;
+# в условиях мирового соглашения («перечислить на счёт Истца … в срок до …») это срок платежа, не срок для юриста
+PROCEDURAL_RE = re.compile(r"суд|устранить|представить|недостатк|заявител", re.IGNORECASE)
 WORDS = {"одного месяца": 30, "месяца": 30, "двух месяцев": 60, "пятнадцати дней": 15, "десяти дней": 10}
 ARTICLE_RE = re.compile(r"стать\w+\s+([\d,\s\-–и]+?)\s+(Арбитражного процессуального кодекса|АПК РФ|Гражданского процессуального кодекса|ГПК РФ)", re.IGNORECASE)
 L1_MAX_DAYS = 15
@@ -107,15 +109,32 @@ def operative_part(text: str) -> tuple[str, int]:
     return flat[heads[-1].end():].strip(), heads[-1].end()
 
 
+_ABBR = ("Орг.", "ст.", "п.", "ч.", "руб.", "коп.", "ул.", "д.", "кв.", "стр.")
+# Граница предложения: точка или маскированный токен ([номер]/[дата]/[сумма]), пробел, заглавная буква
+_SENT_END = re.compile(r"(?:\.|\[(?:номер|дата|сумма)\])\s+(?=[А-ЯЁ])")
+
+
+def _is_abbr(text: str, dot: int) -> bool:
+    head = text[max(0, dot - 6): dot + 1]
+    return text[dot] == "." and any(head.endswith(a) and (len(head) == len(a) or not head[-len(a) - 1].isalpha()) for a in _ABBR)
+
+
 def _sentence(text: str, start: int, end: int, limit: int = 300) -> str:
-    i = text.rfind(". ", 0, start)
-    left = 0 if i == -1 else i + 2
-    right = text.find(". ", end)
-    right = len(text) if right == -1 else right + 1
+    """Предложение, содержащее совпадение [start:end]; «Орг. 01», «ст. 110» не считаются концом предложения."""
+    left = 0
+    for m in _SENT_END.finditer(text, 0, start + 1):   # +1: lookahead должен видеть первую букву совпадения
+        if not _is_abbr(text, m.start()):
+            left = m.end()
+    right = len(text)
+    for m in _SENT_END.finditer(text, end):
+        if not _is_abbr(text, m.start()):
+            right = m.start() + len(m.group(0).rstrip())
+            break
     return text[left:right].strip()[:limit]
 
 
 def find_markers(text: str) -> list[MarkerHit]:
+    """Все маркеры оргов, найденные в резолютивной части, в порядке появления. Нет резолютивной части — пустой список."""
     op, _ = operative_part(text)
     hits: list[MarkerHit] = []
     for no, code, rx, action, level in MARKERS:
@@ -127,9 +146,10 @@ def find_markers(text: str) -> list[MarkerHit]:
 
 def appeal_window(operative: str) -> tuple[int | None, str | None, str | None]:
     """(дней, явная дата, фрагмент). Явная дата «в срок до …» важнее окна обжалования."""
-    m = UNTIL_RE.search(operative)
-    if m:
-        return None, m.group(1), _sentence(operative, m.start(), m.end())
+    for m in UNTIL_RE.finditer(operative):
+        sent = _sentence(operative, m.start(), m.end())
+        if PROCEDURAL_RE.search(sent):
+            return None, m.group(1), sent
     m = WINDOW_RE.search(operative)
     if m:
         days = int(m.group(2)) if m.group(2) else WORDS.get(m.group(1).lower())
@@ -138,15 +158,8 @@ def appeal_window(operative: str) -> tuple[int | None, str | None, str | None]:
 
 
 def route_court_act(text: str, doc_date: date | None = None) -> ActRoute:
-    """Маршрут судебного акта для юриста по 10 фразам-маркерам оргов.
-
-    Ищет маркеры только в резолютивной части (после последнего «решил:/определил:/постановил:»),
-    берёт срок обжалования из текста акта и норму из «Руководствуясь статьями …».
-    Возвращает ActRoute: level (L1 — срок ≤ 15 дней или назначена дата; L2 — маркер есть;
-    L3 — маркеров нет), reason_codes ACT_*, basis, deadline (если известна doc_date),
-    evidence (предложения с маркерами и сроком), actions — что сделать юристу (для письма).
-    """
-    
+    """Решение по судебному акту для route.lawyer: уровень L1/L2/L3, коды маркеров, норма из «Руководствуясь статьями …»,
+    срок (дата из «в срок до …» или дата акта + окно обжалования) и фрагменты-основания. Без маркеров — L3 (только реестр)."""
     r = ActRoute()
     hits = find_markers(text)
     if not hits:
@@ -160,12 +173,14 @@ def route_court_act(text: str, doc_date: date | None = None) -> ActRoute:
     r.window_days = days
     if until:
         r.level, r.deadline = "L1", (until if until != "[дата]" else None)
-        r.evidence += f" | срок: {win_ev}"
+        if win_ev not in r.evidence:
+            r.evidence += f" | срок: {win_ev}"
     elif days is not None:
         r.level = "L1" if days <= L1_MAX_DAYS else "L2"
         if doc_date:
             r.deadline = (doc_date + timedelta(days=days)).isoformat()
-        r.evidence += f" | срок обжалования: {win_ev}"
+        if win_ev not in r.evidence:
+            r.evidence += f" | срок обжалования: {win_ev}"
     else:
         r.level = "L1" if any(h.level == "L1" for h in hits) else "L2"
     # Норма — из фразы «Руководствуясь статьями … АПК РФ», которая стоит прямо перед заголовком резолютивной части
@@ -179,11 +194,10 @@ def route_court_act(text: str, doc_date: date | None = None) -> ActRoute:
     return r
 
 
-if __name__ == "__main__":  # отладка: python -m src.rules.markers <pdf|txt>
+if __name__ == "__main__":  # python -m src.rules.markers <pdf|txt>
     import sys
     p = sys.argv[1]
     if p.lower().endswith(".pdf"):
-        # локальный импорт: модуль правил не должен зависеть от PDF-библиотеки
         import pymupdf
         txt = " ".join(pg.get_text("text", sort=True) for pg in pymupdf.open(p))
     else:
