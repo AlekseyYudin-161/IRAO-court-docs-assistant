@@ -1,25 +1,24 @@
 from dependency_injector import containers, providers
-from src.core.config import settings
-from src.utils.image_utils import ImageUtils
-from src.utils.text_utils import TextUtils
-from src.utils.pdf_utils import PdfUtils
+from src.pdf_branch.core.config import settings
+from src.pdf_branch.utils.image_utils import ImageUtils
+from src.pdf_branch.utils.text_utils import TextUtils
+from src.pdf_branch.utils.pdf_utils import PdfUtils
 
-from src.services.ocr.ocr_service import OcrService
-from src.services.ner.ner_service import NERService
-from src.services.document_processing_service import DocumentProcessingService
-from src.services.classification.document_classification import DocumentClassifier
-from src.services.validation.extraction_validator import ExtractionValidator
+from src.pdf_branch.services.ocr.ocr_service import OcrService
+from src.pdf_branch.services.ner.ner_service import NERService
+from src.pdf_branch.services.document_processing_service import DocumentProcessingService
+from src.pdf_branch.services.classification.document_classification import DocumentClassifier
 
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         packages=[
-            "src.api.v1",
-            "src.services",
-            "src.services.ocr",
-            "src.services.ner",
-            "src.utils",
-            "src.core",
+            "src.pdf_branch.api.v1",
+            "src.pdf_branch.services",
+            "src.pdf_branch.services.ocr",
+            "src.pdf_branch.services.ner",
+            "src.pdf_branch.utils",
+            "src.pdf_branch.core",
         ]
     )
 
@@ -31,7 +30,6 @@ class Container(containers.DeclarativeContainer):
     pdf_utils = providers.Singleton(PdfUtils)
 
     document_classifier = providers.Singleton(DocumentClassifier)
-    extraction_validator = providers.Singleton(ExtractionValidator)
 
     # Сервисы
     ocr_service = providers.Singleton(
@@ -50,5 +48,4 @@ class Container(containers.DeclarativeContainer):
         ocr_service=ocr_service,
         ner_service=ner_service,
         classifier=document_classifier,
-        validator=extraction_validator,
     )
