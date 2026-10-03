@@ -8,9 +8,14 @@ import json
 import logging
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from src.acts.to_doc import act_to_doc
 from src.core.columns import OCR_COLUMNS, XML_COLUMNS
 from src.core.contract import Doc, load
+from src.llm import client as llm_client
+
+load_dotenv()
 
 log = logging.getLogger("run")
 
@@ -118,6 +123,8 @@ def main() -> None:
     ap.add_argument("--no-llm", action="store_true")
     ap.add_argument("--holdout", action="store_true")
     a = ap.parse_args()
+    if a.no_llm:
+        llm_client.disable()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     out = Path(a.out)
     docs = [route(d) for d in collect_docs(Path(a.docs))]
