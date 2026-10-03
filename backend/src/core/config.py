@@ -27,6 +27,29 @@ class Settings(BaseModel):
 
     TEXT_LAYER_MIN_CHARS: int = int(os.getenv("TEXT_LAYER_MIN_CHARS", 100))
 
+    ENABLE_LLM_VALIDATION: bool = False
+    OLLAMA_URL: str = "http://localhost:11434/api/chat"
+    OLLAMA_MODEL: str = "qwen3:8b"
+    OLLAMA_TIMEOUT: int = 300
+    OLLAMA_SYSTEM_PROMPT: str = """Ты — строгий валидатор извлечения данных из судебных документов.
+        Тебе дают:
+        1) Фрагмент исходного текста документа (OCR).
+        2) JSON с извлечёнными полями.
+        
+        Твоя задача — проверить КАЖДОЕ поле и вернуть ТОЛЬКО JSON-массив объектов
+        вида {"field": "<имя>", "ok": true|false, "reason": "<кратко>"}.
+        
+        Правила:
+        - Если значение поля соответствует тексту — ok=true, reason="".
+        - Если значение null, но в тексте есть подходящее значение — ok=false, reason="пропущено: <что>".
+        - Если значение не null и есть в тексте — ok=true.
+        - Если значение не null и НЕ подтверждается текстом — ok=false, reason="не найдено в тексте".
+        - Для co_debtors и co_debtors_count: co_debtors_count должен равняться len(co_debtors).
+        - Не выдумывай поля. Проверяй только те, что перечислены.
+        - Никаких пояснений вне JSON. Только JSON-массив.
+    """
+
+
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True

@@ -1,41 +1,79 @@
 import re
-from natasha import MoneyExtractor, AddrExtractor
+
+from natasha import AddrExtractor, MoneyExtractor
+
 from .parsers.date_parser import date_parser
 from .parsers.name_parser import name_parser
-
 from .patterns import PASSPORT_NUMBER_PATTERN, SNILS_NUMBER_PATTERN, TIN_PATTERN
+from .rules.models import Candidate
+
 
 class NameExtractor:
     def __init__(self):
         self.parser = name_parser()
 
-    def extract(self, text: str) -> list[str]:
+    def extract_candidates(self, text: str) -> list[Candidate]:
         return [
-            " ".join(
-                part for part in [m.fact.last, m.fact.first, m.fact.middle] if part
+            Candidate(
+                value=" ".join(
+                    part
+                    for part in (m.fact.last, m.fact.first, m.fact.middle)
+                    if part
+                ),
+                start=m.span.start,
+                end=m.span.stop,
+                confidence=0.90,
             )
             for m in self.parser.findall(text)
         ]
+
+    def extract(self, text: str) -> list[str]:
+        return [candidate.value for candidate in self.extract_candidates(text)]
 
 
 class DateExtractor:
     def __init__(self):
         self.parser = date_parser()
 
+    def extract_candidates(self, text: str) -> list[Candidate]:
+        return [
+            Candidate(
+                value=text[m.span.start:m.span.stop],
+                start=m.span.start,
+                end=m.span.stop,
+                confidence=0.95,
+            )
+            for m in self.parser.findall(text)
+        ]
+
     def extract(self, text: str) -> list[str]:
-        return [text[m.span.start : m.span.stop] for m in self.parser.findall(text)]
+        return [candidate.value for candidate in self.extract_candidates(text)]
 
 
 class CostExtractor:
     def __init__(self, morph_vocab):
         self.extractor = MoneyExtractor(morph_vocab)
 
+    def extract_candidates(self, text: str) -> list[Candidate]:
+        return [
+            Candidate(
+                value=f"{m.fact.amount} {m.fact.currency}",
+                start=m.start,
+                end=m.stop,
+                confidence=0.90,
+            )
+            for m in self.extractor(text)
+        ]
+
     def extract(self, text: str) -> list[str]:
-        return [f"{m.fact.amount} {m.fact.currency}" for m in self.extractor(text)]
+        return [candidate.value for candidate in self.extract_candidates(text)]
 
     def extract_with_spans(self, text: str) -> list[tuple[str, tuple[int, int]]]:
         return [
-            (f"{m.fact.amount} {m.fact.currency}", (m.start, m.stop))
+            (
+                f"{m.fact.amount} {m.fact.currency}",
+                (m.start, m.stop),
+            )
             for m in self.extractor(text)
         ]
 
@@ -45,52 +83,77 @@ class AddressExtractor:
         self.extractor = AddrExtractor(morph_vocab)
 
     def extract(
-        self, text: str, money_spans: list[tuple[int, int]] = None
+        self,
+        text: str,
+        money_spans: list[tuple[int, int]] | None = None,
     ) -> list[str]:
+
         money_spans = money_spans or []
-        matches = list(self.extractor(text))
         addresses = []
-        current_address = []
+        current = []
         last_stop = None
 
-        for m in matches:
-            if any(m.start < end and m.stop > start for start, end in money_spans):
+        for match in self.extractor(text):
+            if any(
+                match.start < end and match.stop > start
+                for start, end in money_spans
+            ):
                 continue
-            if m.fact.value in ["Жилой", "Жилого", "Жилым", "жилой", "жилого", "жилым"]:
+
+            if match.fact.value.lower() in {"жилой", "жилого", "жилым"}:
                 continue
-            if m.fact.type == "индекс":
-                context = text[max(0, m.start - 30) : m.stop + 30].lower()
-                if (
-                    "паспорт" in context
-                    or "n" in context
-                    or "№" in context
-                    or "00" in context
-                ):
+
+            if match.fact.type == "индекс":
+                context = text[max(0, match.start - 30):match.stop + 30].lower()
+
+                if any(value in context for value in ("паспорт", "n", "№", "00")):
                     continue
-            if m.fact.type is None:
+
+            if match.fact.type is None:
                 continue
 
-            span_text = text[m.start : m.stop]
-            if last_stop is None or m.start - last_stop < 20:
-                current_address.append(span_text)
+            if last_stop is None or match.start - last_stop < 20:
+                current.append(text[match.start:match.stop])
             else:
-                if current_address:
-                    addresses.append(" ".join(current_address))
-                current_address = [span_text]
-            last_stop = m.stop
+                if current:
+                    addresses.append(" ".join(current))
+                current = [text[match.start:match.stop]]
 
-        if current_address:
-            addresses.append(" ".join(current_address))
+            last_stop = match.stop
+
+        if current:
+            addresses.append(" ".join(current))
+
         return addresses
 
-class PassportNumberExtractor:
-    def extract(self, text: str) -> list[str]:
-        return re.findall(PASSPORT_NUMBER_PATTERN, text)
 
-class SnilsNumberExtractor:
-    def extract(self, text: str) -> list[str]:
-        return re.findall(SNILS_NUMBER_PATTERN, text)
+class RegexExtractor:
+    pattern: str
+    confidence = 0.95
 
-class TINExtractor:
     def extract(self, text: str) -> list[str]:
-        return re.findall(TIN_PATTERN, text)
+        return re.findall(self.pattern, text)
+
+    def extract_candidates(self, text: str) -> list[Candidate]:
+        return [
+            Candidate(
+                value=match.group(),
+                start=match.start(),
+                end=match.end(),
+                source="regex",
+                confidence=self.confidence,
+            )
+            for match in re.finditer(self.pattern, text)
+        ]
+
+
+class PassportNumberExtractor(RegexExtractor):
+    pattern = PASSPORT_NUMBER_PATTERN
+
+
+class SnilsNumberExtractor(RegexExtractor):
+    pattern = SNILS_NUMBER_PATTERN
+
+
+class TINExtractor(RegexExtractor):
+    pattern = TIN_PATTERN

@@ -8,6 +8,7 @@ from backend.src.services.ocr.ocr_service import OcrService
 from backend.src.services.ner.ner_service import NERService
 from backend.src.services.document_processing_service import DocumentProcessingService
 from backend.src.services.classification.document_classification import DocumentClassifier
+from backend.src.services.validation.extraction_validator import ExtractionValidator
 
 
 class Container(containers.DeclarativeContainer):
@@ -30,6 +31,7 @@ class Container(containers.DeclarativeContainer):
     pdf_utils = providers.Singleton(PdfUtils)
 
     document_classifier = providers.Singleton(DocumentClassifier)
+    extraction_validator = providers.Singleton(ExtractionValidator)
 
     # Сервисы
     ocr_service = providers.Singleton(
@@ -48,4 +50,5 @@ class Container(containers.DeclarativeContainer):
         ocr_service=ocr_service,
         ner_service=ner_service,
         classifier=document_classifier,
+        validator=extraction_validator,
     )
