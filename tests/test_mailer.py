@@ -1,3 +1,5 @@
+"""Mailer tests"""
+
 from pathlib import Path
 
 from src.core.contract import load
