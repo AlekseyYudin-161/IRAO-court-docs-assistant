@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
-from backend.src.services.ner.rules.models import RuleExtraction
+from src.services.ner.rules.models import RuleExtraction
 
 
 class ValidationIssue(BaseModel):

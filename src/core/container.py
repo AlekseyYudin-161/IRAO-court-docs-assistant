@@ -1,25 +1,25 @@
 from dependency_injector import containers, providers
-from backend.src.core.config import settings
-from backend.src.utils.image_utils import ImageUtils
-from backend.src.utils.text_utils import TextUtils
-from backend.src.utils.pdf_utils import PdfUtils
+from src.core.config import settings
+from src.utils.image_utils import ImageUtils
+from src.utils.text_utils import TextUtils
+from src.utils.pdf_utils import PdfUtils
 
-from backend.src.services.ocr.ocr_service import OcrService
-from backend.src.services.ner.ner_service import NERService
-from backend.src.services.document_processing_service import DocumentProcessingService
-from backend.src.services.classification.document_classification import DocumentClassifier
-from backend.src.services.validation.extraction_validator import ExtractionValidator
+from src.services.ocr.ocr_service import OcrService
+from src.services.ner.ner_service import NERService
+from src.services.document_processing_service import DocumentProcessingService
+from src.services.classification.document_classification import DocumentClassifier
+from src.services.validation.extraction_validator import ExtractionValidator
 
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         packages=[
-            "backend.src.api.v1",
-            "backend.src.services",
-            "backend.src.services.ocr",
-            "backend.src.services.ner",
-            "backend.src.utils",
-            "backend.src.core",
+            "src.api.v1",
+            "src.services",
+            "src.services.ocr",
+            "src.services.ner",
+            "src.utils",
+            "src.core",
         ]
     )
 

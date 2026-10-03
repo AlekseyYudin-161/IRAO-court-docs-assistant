@@ -1,6 +1,6 @@
 # ner_service.py
 from natasha import MorphVocab
-from backend.src.utils.text_utils import TextUtils
+from src.utils.text_utils import TextUtils
 
 from .extractors import (
     NameExtractor,
@@ -11,7 +11,7 @@ from .extractors import (
     SnilsNumberExtractor,
     TINExtractor
 )
-from backend.src.dto.ocr_ner import ExtractedEntitiesDTO
+from src.dto.ocr_ner import ExtractedEntitiesDTO
 
 from .rules.rule_resolver import RuleResolver
 

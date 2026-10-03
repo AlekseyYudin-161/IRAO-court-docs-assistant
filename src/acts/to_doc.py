@@ -10,9 +10,9 @@ import time
 from datetime import date
 from pathlib import Path
 
-from backend.src.core.columns import ACT_FIELDS
-from backend.src.core.contract import Doc, FieldValue, LawyerRoute, ReviewRoute, Route
-from backend.src.rules.markers import flatten, looks_like_court_act, route_court_act
+from src.core.columns import ACT_FIELDS
+from src.core.contract import Doc, FieldValue, LawyerRoute, ReviewRoute, Route
+from src.rules.markers import flatten, looks_like_court_act, route_court_act
 
 KIND_RE = re.compile(r"\b(РЕШЕНИЕ|ОПРЕДЕЛЕНИЕ|ПОСТАНОВЛЕНИЕ)\b|Резолютивная часть (решения|определения|постановления)")
 CASE_RE = re.compile(r"Дело\s*№?\s*((?:А\d{2}-\d+/\d{4})|\[дело\])")

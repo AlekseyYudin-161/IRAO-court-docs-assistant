@@ -4,9 +4,9 @@ from typing import Any
 
 import pytesseract
 
-from backend.src.core.config import settings
-from backend.src.utils.image_utils import ImageUtils
-from backend.src.utils.pdf_utils import PdfUtils
+from src.core.config import settings
+from src.utils.image_utils import ImageUtils
+from src.utils.pdf_utils import PdfUtils
 
 
 class OcrService:

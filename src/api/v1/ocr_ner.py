@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from dependency_injector.wiring import inject, Provide
 
-from backend.src.core.container import Container
-from backend.src.dto.ocr_ner import ProcessDocumentOut
-from backend.src.services.document_processing_service import DocumentProcessingService
+from src.core.container import Container
+from src.dto.ocr_ner import ProcessDocumentOut
+from src.services.document_processing_service import DocumentProcessingService
 
 router = APIRouter(tags=["OCR and NER"])
 

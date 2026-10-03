@@ -9,8 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # чтобы работал import src.* при запуске как скрипта
 
-from backend.src.core.columns import OCR_FIELDS, XML_FIELDS
-from backend.src.core.contract import Doc, FieldValue, LawyerRoute, ReviewRoute, Route, dump
+from src.core.columns import OCR_FIELDS, XML_FIELDS
+from src.core.contract import Doc, FieldValue, LawyerRoute, ReviewRoute, Route, dump
 
 ROOT = Path(__file__).resolve().parents[1]
 LABELS = ROOT / "data" / "courts_anonymized" / "labels"

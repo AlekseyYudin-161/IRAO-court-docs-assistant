@@ -1,6 +1,6 @@
 import pypdfium2 as pdfium
 
-from backend.src.core.config import settings
+from src.core.config import settings
 
 
 class PdfUtils:

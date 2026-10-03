@@ -1,12 +1,12 @@
 import logging
-from backend.src.utils import compat_pymorphy
+from src.utils import compat_pymorphy
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.src.api.v1 import get_api_router
-from backend.src.core.config import settings
-from backend.src.core.container import Container
-from backend.src.core.log import setup_logging
+from src.api.v1 import get_api_router
+from src.core.config import settings
+from src.core.container import Container
+from src.core.log import setup_logging
 
 
 def create_app(container: Container = None) -> FastAPI:

@@ -5,8 +5,8 @@ from typing import Any
 
 import requests
 
-from backend.src.core.config import settings
-from backend.src.services.ner.rules.models import RuleExtraction
+from src.core.config import settings
+from src.services.ner.rules.models import RuleExtraction
 
 logger = logging.getLogger(__name__)
 

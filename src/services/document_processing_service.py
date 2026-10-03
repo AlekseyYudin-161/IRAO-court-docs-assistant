@@ -6,12 +6,12 @@ from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
 
-from backend.src.core.config import settings
-from backend.src.dto.ocr_ner import ProcessDocumentOut
-from backend.src.services.classification.document_classification import DocumentClassifier
-from backend.src.services.ner.ner_service import NERService
-from backend.src.services.ocr.ocr_service import OcrService
-from backend.src.services.validation.extraction_validator import ExtractionValidator
+from src.core.config import settings
+from src.dto.ocr_ner import ProcessDocumentOut
+from src.services.classification.document_classification import DocumentClassifier
+from src.services.ner.ner_service import NERService
+from src.services.ocr.ocr_service import OcrService
+from src.services.validation.extraction_validator import ExtractionValidator
 
 logger = logging.getLogger(__name__)
 
