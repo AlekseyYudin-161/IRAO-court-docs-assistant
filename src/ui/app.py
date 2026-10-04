@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import html
+import inspect
 import os
 import re
 import sys
@@ -181,11 +182,18 @@ def fields_table(doc) -> None:
                "Жёлтым — значение от LLM, подтверждённое цитатой.")
 
 
+def _to(fn, *args):
+    """mailer.render / send_for_doc с явным адресом из поля «Ответственный сотрудник» (to_addr — с 04.10)."""
+    if "to_addr" in inspect.signature(fn).parameters:
+        return fn(*args, to_addr=lawyer)
+    return fn(*args)
+
+
 def mail_block(doc) -> None:
     if not mailer.needs_letter(doc):
         st.caption("Письмо не требуется: уровень L3 и нет флагов ручной проверки — документ только в реестре.")
         return
-    subj, body = mailer.render(doc)
+    subj, body = _to(mailer.render, doc)
     st.markdown(f'<div class="mail"><div class="subj">Кому: {html.escape(lawyer)}<br>Тема: {html.escape(subj)}</div>'
                 f'{html.escape(body)}</div>', unsafe_allow_html=True)
     att = mailer._attachment(doc)  # pylint: disable=protected-access
@@ -198,7 +206,7 @@ def mail_block(doc) -> None:
     if c2.button(label, width="stretch", key=f"send_{doc.doc_id}"):
         host = None if send_real else os.environ.pop("SMTP_HOST", None)   # без отправки: только .eml
         try:
-            status = mailer.send_for_doc(doc, out_dir / "ui" / "mail")
+            status = _to(mailer.send_for_doc, doc, out_dir / "ui" / "mail")
         finally:
             if host:
                 os.environ["SMTP_HOST"] = host
