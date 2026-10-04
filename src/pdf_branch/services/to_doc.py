@@ -6,19 +6,23 @@ from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
 
-from dotenv import load_dotenv
+from src.acts.to_doc import act_text_to_doc
+from src.core.columns import OCR_FIELDS, XML_FIELDS
+from src.core.contract import Doc, FieldValue, ReviewRoute, Route
+from src.llm import client as llm
+from src.llm.schemas import ocr_schema
+from src.pdf_branch.core.container import Container
+from src.pdf_branch.services.classification.document_classification import (
+    DocumentClass,
+    SourceKind,
+)
+from src.pdf_branch.utils import compat_pymorphy  # noqa: F401
+from src.rules.markers import looks_like_court_act
 
-load_dotenv(Path(__file__).resolve().parents[3] / ".env", override=True)
+# .env здесь не читаем: это делают точки входа (run_examples.py, src/ui/app.py) — иначе импорт модуля
+# перетирал переменные окружения и тесты отправляли реальные письма.
 
-from src.pdf_branch.utils import compat_pymorphy  # noqa: F401,E402
-from src.acts.to_doc import act_text_to_doc  # noqa: E402
-from src.core.columns import OCR_FIELDS, XML_FIELDS  # noqa: E402
-from src.core.contract import Doc, FieldValue, ReviewRoute, Route  # noqa: E402
-from src.llm import client as llm  # noqa: E402
-from src.llm.schemas import ocr_schema  # noqa: E402
-from src.pdf_branch.core.container import Container  # noqa: E402
-from src.pdf_branch.services.classification.document_classification import DocumentClass, SourceKind  # noqa: E402
-from src.rules.markers import looks_like_court_act  # noqa: E402
+DATA_ROOT = "data/courts_anonymized"            # doc.file считается от этого корня — как в labels/ и в XML-ветке
 
 
 def log(msg: str) -> None:
@@ -43,7 +47,11 @@ COLUMN_TO_RULE = {
 
 DERIVED_COLS = {"фамилия", "имя", "отчетство", "соответчики_кол-во"}
 NAME_COLS = {"фио", "соответчики_фио"}
-MONTHS = "января февраля марта апреля мая июня июля августа сентября октября ноября декабря".split()
+MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+
+# Признак постановления ФССП в PDF. Только служебная шапка выгрузки: фраза «судебный пристав-исполнитель»
+# встречается в любом исполнительном листе и раньше уводила все сканы ИЛ в пустой fssp_doc.
+FSSP_PDF_RE = re.compile(r"Вид документа:\s*O_IP_")
 
 
 def to_date(s: str) -> str:
@@ -68,11 +76,83 @@ def to_money(s: str) -> str:
         return ""
 
 
+def to_inn(s: str) -> str:
+    """ИНН должника-физлица — 12 цифр. 10 цифр — это ИНН организации (взыскателя), в столбец не кладём."""
+    digits = re.sub(r"\D", "", s)
+    return digits if len(digits) == 12 else ""
+
+
+# --- ФИО в именительный падеж -------------------------------------------------------------------------
+# В приказах должник стоит в родительном («с Макетнова Леонтия Степановича»), в разметке — именительный.
+# Род берём из отчества (надёжнее pymorphy), фамилию склоняем правилами, имя и отчество — pymorphy.
+
+try:
+    import pymorphy3
+    _MORPH = pymorphy3.MorphAnalyzer()
+except Exception:                                   # pragma: no cover — без словарей оставляем как есть
+    _MORPH = None
+
+_MASC_SURNAME = (("ова", "ов"), ("ева", "ев"), ("ёва", "ёв"), ("ина", "ин"), ("ына", "ын"),
+                 ("ого", "ий"), ("его", "ий"))
+_FEM_SURNAME = (("овой", "ова"), ("евой", "ева"), ("ёвой", "ёва"), ("иной", "ина"), ("ыной", "ына"),
+                ("ской", "ская"), ("цкой", "цкая"), ("овую", "ова"), ("евую", "ева"),
+                ("ову", "ова"), ("еву", "ева"), ("ину", "ина"))
+
+
+def _cap(word: str) -> str:
+    return "-".join(p[:1].upper() + p[1:] for p in word.split("-"))
+
+
+def _gender(patronymic: str) -> str | None:
+    p = patronymic.lower()
+    if p.endswith(("ич", "ича", "ичу", "ичем", "иче", "ыч", "ыча", "ычу")):
+        return "masc"
+    if p.endswith(("на", "ны", "не", "ну", "ной")):
+        return "femn"
+    return None
+
+
+def _nomn(word: str, gender: str | None, tags: tuple[str, ...]) -> str:
+    """Именительный падеж через pymorphy: берём разбор с нужной пометкой (Name/Patr) и полом."""
+    if not _MORPH or not word:
+        return word
+    parses = [p for p in _MORPH.parse(word.lower()) if any(t in p.tag for t in tags)]
+    if gender:
+        parses = [p for p in parses if p.tag.gender in (gender, None)] or parses
+    if not parses:
+        return word
+    form = parses[0].inflect({"nomn"})
+    return _cap(form.word if form else parses[0].normal_form)
+
+
+def _surname_nomn(word: str, gender: str | None) -> str:
+    low = word.lower()
+    rules = _MASC_SURNAME if gender == "masc" else _FEM_SURNAME if gender == "femn" else ()
+    for end, repl in rules:
+        if low.endswith(end):
+            return _cap(low[: -len(end)] + repl)
+    return _cap(low)
+
+
+def to_nominative(fio: str) -> str:
+    parts = fio.split()
+    if len(parts) != 3:
+        return fio
+    surname, name, patronymic = parts
+    gender = _gender(patronymic)
+    return " ".join((
+        _surname_nomn(surname, gender),
+        _nomn(name, gender, ("Name",)),
+        _nomn(patronymic, gender, ("Patr",)),
+    ))
+
+
 FORMATS = {
     "дата рождения": to_date, "дело_дата": to_date,
     "период_дз_начало": to_date, "период_дз_оконч": to_date,
     "дз_осн": to_money, "дз_пени": to_money, "дз_пошлина": to_money,
-    "инн": lambda s: re.sub(r"\D", "", s),
+    "инн": to_inn,
+    "фио": to_nominative,
 }
 
 
@@ -159,7 +239,7 @@ def check_with_llm(fields: dict[str, FieldValue], text: str) -> list[str]:
         if not value:
             continue
 
-        if not old.value or col in NAME_COLS:
+        if not old.value:                           # regex_first: LLM только дозаполняет пустое
             fields[col] = FieldValue(
                 value=value, evidence=quote[:200] or value,
                 confidence=0.6, method="llm"
@@ -174,6 +254,8 @@ def check_with_llm(fields: dict[str, FieldValue], text: str) -> list[str]:
 
 
 def fix_derived(fields: dict[str, FieldValue]) -> None:
+    """Фамилия/имя/отчество — из ФИО. Соответчики — по шаблону заказчика: ВСЕ должники как в тексте
+    (включая основного), количество — их число; один должник → он же в списке, количество 1."""
     fio = fields["фио"]
 
     if len(parts := fio.value.split()) == 3:
@@ -184,16 +266,23 @@ def fix_derived(fields: dict[str, FieldValue]) -> None:
             )
 
     co = fields["соответчики_фио"]
-    if not co.value:
+    debtors: list[str] = []
+    for p in people(co.value):
+        if key(p) not in map(key, debtors):
+            debtors.append(p)
+    if not debtors and fio.value:
+        debtors = [fio.evidence or fio.value]       # как в тексте — так требует шаблон
+    if not debtors:
         return
 
-    others = [p for p in people(co.value) if key(p) != key(fio.value)]
-    fields["соответчики_фио"] = (
-        co.model_copy(update={"value": "; ".join(others)}) if others else empty()
+    fields["соответчики_фио"] = FieldValue(
+        value=", ".join(debtors), evidence=co.evidence or fio.evidence,
+        confidence=co.confidence if co.value else fio.confidence,
+        method=co.method if co.value else "derived",
     )
-    fields["соответчики_кол-во"] = (
-        FieldValue(value=str(len(others)), evidence="по списку соответчиков",
-                   confidence=0.9, method="derived") if others else empty()
+    fields["соответчики_кол-во"] = FieldValue(
+        value=str(len(debtors)), evidence="по списку должников",
+        confidence=0.9, method="derived",
     )
 
 
@@ -203,20 +292,26 @@ def make_doc(path: Path, rel: str, table: str, doc_type: str, fields: dict, **kw
 
 
 def fssp_doc(path: Path, rel: str) -> Doc:
+    """Постановление ФССП, пришедшее одним PDF без XML: реквизиты не извлекаем, отдаём на ручную проверку."""
     return make_doc(path, rel, "xml", "постановление ФССП",
                     {c: empty() for c in XML_FIELDS},
-                    extra={"twin": f"{path.stem}.xml"})
+                    route=Route(review=ReviewRoute(
+                        flags=["REQUIRED_FIELD_MISSING"],
+                        evidence=["постановление ФССП в PDF: реквизиты берутся из XML-выгрузки"],
+                    )))
 
 
-def pdf_to_doc(path: str | Path, data_root="data") -> Doc:
-    path = Path(path)
+def pdf_to_doc(path: str | Path, data_root: str | Path = DATA_ROOT) -> Doc | None:
+    """PDF → Doc. None — если это PDF-двойник постановления ФССП: его обрабатывает XML-ветка."""
+    path, data_root = Path(path), Path(data_root)
     rel = str(path.relative_to(data_root)) if path.is_relative_to(data_root) else path.name
     enabled = llm.enabled()
 
     log(f"Файл: {path} | LLM: {llm.model() if enabled else 'выключена'}")
 
     if path.with_suffix(".xml").exists():
-        return fssp_doc(path, rel)
+        log(f"{path.name}: есть XML-двойник, PDF пропускаем")
+        return None
 
     a = asyncio.run(get_service().analyze(path.read_bytes(), path.name))
     text = "\n".join(page["recognized_text"] for page in a.ocr)
@@ -229,7 +324,7 @@ def pdf_to_doc(path: str | Path, data_root="data") -> Doc:
         f"класс: {doc_class.value}, источник: {source.value}"
     )
 
-    if re.search(r"Вид документа:\s*O_IP_|Судебный пристав-исполнитель", text):
+    if FSSP_PDF_RE.search(text):
         return fssp_doc(path, rel)
 
     if doc_class is DocumentClass.UNKNOWN:
@@ -264,7 +359,7 @@ def pdf_to_doc(path: str | Path, data_root="data") -> Doc:
     return make_doc(
         path, rel, "ocr", doc_type, fields,
         route=Route(review=ReviewRoute(
-            flags=["LOW_CONFIDENCE"] * len(conflicts), evidence=conflicts
+            flags=["LOW_CONFIDENCE"] if conflicts else [], evidence=conflicts
         )),
         timings_ms={**a.timings_ms, "llm": llm_ms},
     )
@@ -279,9 +374,14 @@ def find_pdf(name: str, data_root="data") -> Path:
 
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+
     from src.core.contract import dump
 
+    load_dotenv()
     name = sys.argv[1] if len(sys.argv) > 1 else input("Имя файла: ")
     doc = pdf_to_doc(find_pdf(name))
+    if doc is None:
+        sys.exit("PDF-двойник постановления ФССП: обрабатывается XML-веткой")
     dump(doc, f"out/{doc.doc_id}.json")
     log(f"Готово: {doc.doc_type} → out/{doc.doc_id}.json")

@@ -25,6 +25,18 @@ log = logging.getLogger("run")
 HOLDOUT = Path("data/courts_anonymized/holdout.txt")
 
 
+def _pdf_root(p: Path) -> Path:
+    for parent in p.resolve().parents:
+        if parent.name == "courts_anonymized":
+            return parent
+    return p.parent
+
+
+def _pdf_to_doc(p: Path) -> Doc | None:
+    from src.pdf_branch.services.to_doc import pdf_to_doc
+    return pdf_to_doc(p.resolve(), data_root=_pdf_root(p))
+
+
 def holdout_ids() -> set[str]:
     """doc_id из holdout.txt (строки без # и пустых)."""
     if not HOLDOUT.exists():
@@ -40,11 +52,14 @@ def collect_docs(docs_dir: Path) -> list[Doc]:
     for p in sorted(docs_dir.rglob("*.pdf")):
         if "labels" in p.parts:
             continue
-        d = act_to_doc(p, data_root=docs_dir)      # None → приказ/ИЛ/ФССП, их возьмёт PDF-ветка middle ml
+        d = act_to_doc(p, data_root=docs_dir)
         if d is not None:
             docs.append(d)
+        elif "ocr" in p.parts:
+            if (d := _pdf_to_doc(p)) is not None:
+                docs.append(d)
         else:
-            log.info("PDF-ветка ещё не подключена, пропускаю %s", p)
+            log.info("PDF-двойник ФССП, пропускаю %s", p.name)
     for p in sorted(docs_dir.rglob("*.xml")):
         docs.append(xml_to_doc(p))              # --no-llm уже выключил llm_client
     return docs
@@ -57,6 +72,8 @@ def run_one(path: str | Path, no_llm: bool = False) -> Doc:
     if p.suffix.lower() == ".json":
         doc = load(p)
     elif p.suffix.lower() == ".pdf" and (doc := act_to_doc(p, data_root=p.parent)) is not None:
+        pass
+    elif p.suffix.lower() == ".pdf" and (doc := _pdf_to_doc(p)) is not None:
         pass
     elif p.suffix.lower() == ".xml":
         doc = xml_to_doc(p, use_llm=False if no_llm else None)
