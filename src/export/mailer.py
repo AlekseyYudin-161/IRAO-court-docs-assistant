@@ -69,9 +69,13 @@ def _case(doc: Doc) -> tuple[str, str]:
 
 
 def _attachment(doc: Doc) -> Path | None:
-    """Исходный документ: PDF — сам файл, XML — двойник <stem>.pdf рядом, судебный акт — из data/acts."""
-    root = ACTS_ROOT if doc.table == "acts" else DATA_ROOT
-    p = root / doc.file
+    """Исходный документ: сначала точный путь из extra["path"] (UI, загрузка), иначе по корням данных."""
+    ep = doc.extra.get("path") or doc.extra.get("source_path")
+    if ep and Path(ep).is_file():
+        p = Path(ep)
+    else:
+        root = ACTS_ROOT if doc.table == "acts" else DATA_ROOT
+        p = root / doc.file
     if p.suffix.lower() == ".xml":
         p = p.with_suffix(".pdf")
     return p if p.exists() else None
