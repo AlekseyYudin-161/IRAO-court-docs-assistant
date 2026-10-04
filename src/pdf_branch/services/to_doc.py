@@ -2,6 +2,7 @@ import asyncio
 import re
 import sys
 import time
+from src.pdf_branch.utils import compat_pymorphy
 from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
@@ -16,7 +17,6 @@ from src.pdf_branch.services.classification.document_classification import (
     DocumentClass,
     SourceKind,
 )
-from src.pdf_branch.utils import compat_pymorphy  # noqa: F401
 from src.rules.markers import looks_like_court_act
 
 # .env здесь не читаем: это делают точки входа (run_examples.py, src/ui/app.py) — иначе импорт модуля
