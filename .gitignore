@@ -1,9 +1,10 @@
 # --- рабочие артефакты пайплайна ---
 # кэш OCR, рендеры страниц, промежуточные doc.json
-work/
+work/tmp/
 # пробные прогоны                 
 out/examples/
 out/acts/
+out/xml_check/
 *.log
 tmp/
 

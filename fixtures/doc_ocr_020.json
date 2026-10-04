@@ -1,0 +1,184 @@
+{
+  "doc_id": "ocr_020",
+  "source_type": "pdf",
+  "file": "ocr/writs_electronic/ocr_020.pdf",
+  "table": "ocr",
+  "doc_type": "ИЛ эл",
+  "doc_subtype": null,
+  "fields": {
+    "улица": {
+      "value": "40 лет Примеров ул.",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дом": {
+      "value": "132",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "кв": {
+      "value": "13",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "фамилия": {
+      "value": "Макетцова",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "имя": {
+      "value": "Таисия",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "отчетство": {
+      "value": "Олеговна",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "фио": {
+      "value": "Макетцова Таисия Олеговна",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дата рождения": {
+      "value": "1969-04-12",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "паспорт": {
+      "value": "8735 369412",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "снилс": {
+      "value": "",
+      "evidence": null,
+      "confidence": 0.0,
+      "method": "gold",
+      "reason": "NOT_IN_TEXT"
+    },
+    "инн": {
+      "value": "862152469440",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дело_номер": {
+      "value": "2-8099/2032",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дело_дата": {
+      "value": "2032-09-15",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "период_дз_начало": {
+      "value": "2026-07-03",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "период_дз_оконч": {
+      "value": "2028-09-01",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_осн": {
+      "value": "114666.18",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_пени": {
+      "value": "4000.00",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "дз_пошлина": {
+      "value": "",
+      "evidence": null,
+      "confidence": 0.0,
+      "method": "gold",
+      "reason": "NOT_IN_TEXT"
+    },
+    "соответчики_кол-во": {
+      "value": "1",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    },
+    "соответчики_фио": {
+      "value": "Макетцова Таисия Олеговна",
+      "evidence": "fixture:labels/ocr.csv",
+      "confidence": 1.0,
+      "method": "gold",
+      "reason": null
+    }
+  },
+  "extra": {
+    "conflicts": [
+      {
+        "field": "инн",
+        "values": [
+          "862152469440",
+          "80416142465"
+        ],
+        "evidence": [
+          "карточка должника",
+          "цитата судебного акта"
+        ]
+      }
+    ]
+  },
+  "route": {
+    "lawyer": {
+      "level": "L3",
+      "reason_codes": [],
+      "basis": null,
+      "deadline": null,
+      "evidence": null
+    },
+    "review": {
+      "flags": [
+        "ID_CONFLICT"
+      ],
+      "evidence": [
+        "инн: 862152469440 ≠ 80416142465"
+      ]
+    }
+  },
+  "timings_ms": {},
+  "pipeline_version": "v2.4"
+}
