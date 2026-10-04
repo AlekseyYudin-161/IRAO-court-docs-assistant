@@ -69,9 +69,13 @@ def _case(doc: Doc) -> tuple[str, str]:
 
 
 def _attachment(doc: Doc) -> Path | None:
-    """Исходный документ: PDF — сам файл, XML — двойник <stem>.pdf рядом, судебный акт — из data/acts."""
-    root = ACTS_ROOT if doc.table == "acts" else DATA_ROOT
-    p = root / doc.file
+    """Исходный документ: сначала точный путь из extra["path"] (UI, загрузка), иначе по корням данных."""
+    ep = doc.extra.get("path") or doc.extra.get("source_path")
+    if ep and Path(ep).is_file():
+        p = Path(ep)
+    else:
+        root = ACTS_ROOT if doc.table == "acts" else DATA_ROOT
+        p = root / doc.file
     if p.suffix.lower() == ".xml":
         p = p.with_suffix(".pdf")
     return p if p.exists() else None
@@ -119,16 +123,17 @@ def build_message(doc: Doc, to_addr: str, from_addr: str) -> EmailMessage:
     return msg
 
 
-def render(doc: Doc) -> tuple[str, str]:
-    """(тема, тело) для превью письма в UI — карточка E вызывает mailer.render(doc)."""
-    msg = build_message(doc, os.getenv("LAWYER_EMAIL", "lawyer@example.local"),
+def render(doc: Doc, to_addr: str | None = None) -> tuple[str, str]:
+    """(тема, тело) для превью письма в UI — карточка E вызывает mailer.render(doc, to_addr)."""
+    msg = build_message(doc, to_addr or os.getenv("LAWYER_EMAIL", "lawyer@example.local"),
                         os.getenv("MAIL_FROM", "doc-assistant@example.local"))
     return str(msg["Subject"]), msg.get_body(preferencelist=("plain",)).get_content()
 
 
-def send_for_doc(doc: Doc, mail_dir: Path) -> dict:
-    """Возвращает статус для реестра: {"eml": путь, "sent": bool, "to": адрес, "error": str|None}."""
-    to_addr = os.getenv("LAWYER_EMAIL", "lawyer@example.local")
+def send_for_doc(doc: Doc, mail_dir: Path, to_addr: str | None = None) -> dict:
+    """Возвращает статус для реестра: {"eml": путь, "sent": bool, "to": адрес, "error": str|None}.
+    to_addr — адрес получателя из UI; по умолчанию LAWYER_EMAIL из .env."""
+    to_addr = to_addr or os.getenv("LAWYER_EMAIL", "lawyer@example.local")
     from_addr = os.getenv("MAIL_FROM", "doc-assistant@example.local")
     msg = build_message(doc, to_addr, from_addr)
     mail_dir.mkdir(parents=True, exist_ok=True)
