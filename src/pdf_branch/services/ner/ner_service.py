@@ -55,7 +55,7 @@ class NERService:
         money = [m for m, _ in money_with_spans]
         money_spans = [span for _, span in money_with_spans]
 
-        addresses = self._address_extractor.extract(combined, money_spans=money_spans)
+        # addresses = self._address_extractor.extract(combined, money_spans=money_spans)
         # # Извлечение номера паспорта и снилса
         # passport_number = self._passport_number_extractor.extract(combined)
         # snils_number = self._snils_number_extractor.extract(combined)

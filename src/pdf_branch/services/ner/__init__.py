@@ -22,10 +22,7 @@ from .rules import (
     RuleResult,
     RuleResolver,
 )
-from .rules.address_rules import (
-    extract_debtor_address,
-    split_address,
-)
+from .rules.address_rules import extract_address
 from .rules.case_rules import (
     extract_case_number,
     extract_case_date,
@@ -39,7 +36,9 @@ from .rules.period_rules import extract_period
 from .rules.person_rules import (
     extract_debtor_block,
     extract_co_debtors,
-    build_person_from_name,
+    extract_birth_date,
+    is_official,
+    signature,
 )
 from .rules.text_utils import (
     normalize_spaces,
@@ -48,6 +47,7 @@ from .rules.text_utils import (
     overlap,
     find_first_pattern,
     context,
+    window_after,
 )
 
 __all__ = [
@@ -77,8 +77,7 @@ __all__ = [
     "RuleResolver",
 
     # Rules: address
-    "extract_debtor_address",
-    "split_address",
+    "extract_address",
 
     # Rules: case
     "extract_case_number",
@@ -95,7 +94,9 @@ __all__ = [
     # Rules: person
     "extract_debtor_block",
     "extract_co_debtors",
-    "build_person_from_name",
+    "extract_birth_date",
+    "is_official",
+    "signature",
 
     # Rules: text utils
     "normalize_spaces",
@@ -104,4 +105,5 @@ __all__ = [
     "overlap",
     "find_first_pattern",
     "context",
+    "window_after",
 ]

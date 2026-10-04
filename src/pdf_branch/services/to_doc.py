@@ -2,6 +2,7 @@ import asyncio
 import re
 import sys
 import time
+from src.pdf_branch.utils import compat_pymorphy
 from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
@@ -16,7 +17,6 @@ from src.pdf_branch.services.classification.document_classification import (
     DocumentClass,
     SourceKind,
 )
-from src.pdf_branch.utils import compat_pymorphy  # noqa: F401
 from src.rules.markers import looks_like_court_act
 
 # .env здесь не читаем: это делают точки входа (run_examples.py, src/ui/app.py) — иначе импорт модуля
@@ -315,6 +315,7 @@ def pdf_to_doc(path: str | Path, data_root: str | Path = DATA_ROOT) -> Doc | Non
 
     a = asyncio.run(get_service().analyze(path.read_bytes(), path.name))
     text = "\n".join(page["recognized_text"] for page in a.ocr)
+    print(text)
     doc_class, source = a.classification.doc_class, a.classification.source_kind
 
     log(

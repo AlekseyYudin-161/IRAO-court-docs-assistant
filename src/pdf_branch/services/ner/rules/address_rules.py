@@ -1,86 +1,36 @@
 import re
 
-from .models import Candidate
+from .text_utils import window_after
 
+STREET_WITH_TYPE = False   # True -> "ул. Садовая", False -> "Садовая"
 
-ADDRESS_PATTERNS = [
-    r"адрес\s+должника",
-    r"адрес\s+места\s+жительства",
-    r"место\s+жительства",
-    r"проживающ(?:его|ая)\s+по\s+адресу",
-    r"зарегистрирован(?:ного|ная)\s+по\s+адресу",
-]
+_TYPES = (r"ул(?:ица)?|проспект|пр-т|пер(?:еулок)?|шоссе|наб(?:ережная)?|пл(?:ощадь)?|"
+          r"бульвар|бул|проезд|тупик|аллея")
 
-FLAT_PATTERN = (
-    r"(?:кв(?:артира)?\.?|кв-ра)\s*"
-    r"(?P<flat>\d+[А-Яа-яA-Za-z]?)"
+# тип улицы, потом название до запятой / «д.» / «кв» / номера дома
+STREET_RE = re.compile(
+    rf"(?<![а-яё])(?P<type>{_TYPES})(?:\.\s*|\s+)(?P<name>[^\n,;]{{2,60}}?)"
+    r"(?=\s*[,;\n]|\s+д(?:ом)?\.?\s*\d|\s+кв|\s+\d|\s*$)",
+    re.IGNORECASE,
+)
+FLAT_RE = re.compile(r"(?<![а-яё])(?:кв(?:артира|-ра)?|ком(?:ната)?)\.?\s*(?P<f>\d[\w/\-]*)", re.IGNORECASE)
+HOUSE_RE = re.compile(
+    r"[\s,]*(?:д(?:ом)?\.?\s*)?(?P<h>\d+(?:\s?(?-i:[А-ЯA-Z])(?![а-яёА-ЯA-Z]))?(?:[/\-]\d+)?)",
+    re.IGNORECASE,
 )
 
-HOUSE_PATTERN = (
-    r"д(?:ом)?\.?\s*"
-    r"(?P<house>\d+[А-Яа-яA-Za-z]?)"
-)
-
-STREET_PATTERN = r"""
-    (?P<street>
-        (?:ул\.?|улица|проспект|пр-т|переулок|пер\.?|шоссе|
-        наб\.?|набережная|площадь|пл\.?|бульвар|бул\.?)
-        \s+
-        [А-Яа-яA-Za-z0-9 .-]+?
-    )
-    (?=\s+д(?:ом)?\.?|\s+кв(?:артира)?\.?|,|$)
-"""
-
-
-def extract_debtor_address(
-    text: str,
-    addresses: list[Candidate],
-) -> Candidate | None:
-
-    for pattern in ADDRESS_PATTERNS:
-        for match in re.finditer(pattern, text, re.IGNORECASE):
-            address = next(
-                (
-                    address
-                    for address in addresses
-                    if 0 <= address.start - match.end() <= 150
-                ),
-                None,
-            )
-
-            if address:
-                return address
-
-    return None
-
-
-def split_address(
-    address: str,
-) -> tuple[str | None, str | None, str | None]:
-
-    if not address:
+def extract_address(chunk: str) -> tuple[str | None, str | None, str | None]:
+    street = STREET_RE.search(chunk)
+    if not street:
         return None, None, None
+    name = " ".join(street["name"].split()).strip(" .")
+    if STREET_WITH_TYPE:
+        name = f"{street['type'].lower()}. {name}"
 
-    flat_match = re.search(
-        FLAT_PATTERN,
-        address,
-        re.IGNORECASE,
-    )
-
-    house_match = re.search(
-        HOUSE_PATTERN,
-        address,
-        re.IGNORECASE,
-    )
-
-    street_match = re.search(
-        STREET_PATTERN,
-        address,
-        re.IGNORECASE | re.VERBOSE,
-    )
-
-    return (
-        street_match.group("street").strip() if street_match else None,
-        house_match.group("house") if house_match else None,
-        flat_match.group("flat") if flat_match else None,
-    )
+    rest = chunk[street.end():street.end() + 80]
+    h, f = HOUSE_RE.match(rest), FLAT_RE.search(rest)
+    house = h["h"].strip("-/") if h else None
+    flat = f["f"].strip("-/") if f else None
+    if house and not flat and (dm := re.fullmatch(r"(\d+)-(\d+)", house)):   # «128-16» → дом 128, кв 16
+        house, flat = dm.group(1), dm.group(2)
+    return name, house, flat
