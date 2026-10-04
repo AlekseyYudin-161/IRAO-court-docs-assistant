@@ -220,6 +220,7 @@ def pdf_to_doc(path: str | Path, data_root="data") -> Doc:
 
     a = asyncio.run(get_service().analyze(path.read_bytes(), path.name))
     text = "\n".join(page["recognized_text"] for page in a.ocr)
+    print(text)
     doc_class, source = a.classification.doc_class, a.classification.source_kind
 
     log(

@@ -65,3 +65,12 @@ def context(
         max(0, start - before):
         min(len(text), end + after)
     ]
+
+_STOP_RE = re.compile(r"в\s+пользу|взыскател", re.IGNORECASE)
+
+
+def window_after(text: str, start: int, size: int = 600, stop: int | None = None) -> str:
+    end = start + size if stop is None else min(start + size, stop)
+    chunk = text[start:end]
+    m = _STOP_RE.search(chunk)
+    return chunk[:m.start()] if m else chunk
