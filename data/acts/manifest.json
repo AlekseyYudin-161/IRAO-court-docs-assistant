@@ -1,0 +1,78 @@
+{
+  "version": "1",
+  "pdfCount": 11,
+  "pageCount": 43,
+  "phraseCount": 10,
+  "files": [
+    {
+      "file": "README.md",
+      "bytes": 2278,
+      "sha256": "8c320ac1f0f197ea2cecb83f2f1c18c65d9095440d60e3d4a128ece9422d0bd0"
+    },
+    {
+      "file": "Акт_01.pdf",
+      "bytes": 591410,
+      "sha256": "b5d5b9c2dab45b2f4211b8c9883d58a6f78ce3bc70ad22f540109a9a3c63dde2"
+    },
+    {
+      "file": "Акт_02.pdf",
+      "bytes": 545340,
+      "sha256": "ad203b6133800cbb68ab7069f3efabc9ba09c4629d60349d5c1db1ecaa16d54c"
+    },
+    {
+      "file": "Акт_03.pdf",
+      "bytes": 564689,
+      "sha256": "beba06420a9265d50b50dbf72c7f9ba2357f00411e05326f293108b19170e99e"
+    },
+    {
+      "file": "Акт_04.pdf",
+      "bytes": 908182,
+      "sha256": "6503dacbfa9df665387c140441a2bc5f88d547fe1fb7aef1a81df22bd8b45fd8"
+    },
+    {
+      "file": "Акт_05.pdf",
+      "bytes": 916237,
+      "sha256": "a4245ad3b2fbb8ee3caf182d57e64842771de4d809d11d355f124b1ffb9e2536"
+    },
+    {
+      "file": "Акт_06.pdf",
+      "bytes": 907861,
+      "sha256": "9a0f3398a26f0dd9cfc1892e025065c9653a3501d935ef38b780f50d4935b129"
+    },
+    {
+      "file": "Акт_07.pdf",
+      "bytes": 845707,
+      "sha256": "d1fdd45b0e944a7eff12dd1cf094396d72f0c66626921995295735687b1b5e57"
+    },
+    {
+      "file": "Акт_08.pdf",
+      "bytes": 576798,
+      "sha256": "a5dc97237f80221a7c5314627e70a3f4ef53b3eff91746e1d7cf701c46d0564b"
+    },
+    {
+      "file": "Акт_09.pdf",
+      "bytes": 818366,
+      "sha256": "9d9d878868149ec947a7ddf730c8293a107222602fe9e7086a9f1258fd041ca6"
+    },
+    {
+      "file": "Акт_10.pdf",
+      "bytes": 922590,
+      "sha256": "8286123b10bce0f74e9c292e944217d537dea47df4503b6a45298b06370f3738"
+    },
+    {
+      "file": "Акт_11.pdf",
+      "bytes": 914407,
+      "sha256": "3cc1144286e05fb46af744663f7cac8ea01f87ddec40f5a87ffac314d390ab2c"
+    },
+    {
+      "file": "Перечень ключевых слов и фраз.txt",
+      "bytes": 800,
+      "sha256": "f4ba0d7ce2a7943fc25fb229c0bdb8d975f7c2f292a2a0c868b0d1923937450e"
+    },
+    {
+      "file": "Фразы и примеры.csv",
+      "bytes": 959,
+      "sha256": "e7645c032cf72fb47c5fc922c4743ee5526e7bdad60008e35db80dd8735ad8be"
+    }
+  ]
+}
