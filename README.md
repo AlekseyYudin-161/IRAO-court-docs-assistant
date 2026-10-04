@@ -138,16 +138,23 @@ fixtures/              # 3 эталонных doc.json, собраны из labe
 ## Структура репозитория
 
 ```
-run_examples.py      # точка входа: документы → doc.json → таблицы, письма, отчёт
-src/core/            # контракт doc.json, столбцы шаблонов          — тимлид
-src/xml_branch/      # XML ФССП                                     — junior ML
-src/pdf_branch/      # классификатор, OCR, правила извлечения       — middle NLP
-src/llm/             # клиент Ollama, схемы ответа; prompts/ — тексты промптов
-src/acts/, src/rules/markers.py  # судебные акты                    — тимлид
-src/rules/           # маршрутизация, коды оснований, LETTER_TEXT  — junior ML
-src/export/          # csv, письмо, реестр, scorer, отчёт           — BI / тимлид
-src/ui/              # Streamlit                                    — дизайнер
-scripts/             # check_env, make_fixtures
-tests/, fixtures/    # pytest, эталонные документы
-data/, out/, docs/   # данные, результаты прогона, схема и презентация
+run_examples.py        # точка входа: документы → doc.json → таблицы, письма, реестр, отчёт
+Makefile, pytest.ini   # make setup / test / run-examples / run-all / score / report / ui
+.env.example           # настройки: LLM, Tesseract, почта (копировать в .env)
+prompts/               # scan_extract.md, scan_verify.md, xml_fallback.md — тексты промптов LLM
+src/
+  core/                # контракт doc.json, столбцы шаблонов заказчика
+  xmlbranch/           # XML постановлений ФССП → 24 столбца
+  pdf_branch/          # классификатор, OCR (deskew → Tesseract), правила извлечения (ner/), склейка в doc.json (services/to_doc.py)
+  acts/                # судебные акты: резолютивная часть, фразы заказчика
+  rules/               # маршрутизация L1/L2/L3, коды оснований, тексты для письма, маркеры актов
+  llm/                 # клиент OpenAI-совместимого сервера (Ollama / GPU), схемы ответа
+  export/              # csv по шаблонам, письмо .eml/SMTP, реестр
+  eval/                # scorer, отчёт сверки, нормализация, hold-out
+  ui/                  # Streamlit: документ, папка, реестр, качество
+scripts/               # check_env.py (окружение, модель), make_fixtures.py
+tests/, fixtures/      # pytest (145 тестов), 4 эталонных doc.json
+data/                  # courts_anonymized/ (fssp, ocr, labels, templates, holdout.txt), acts/
+out/                   # результаты полного прогона: ocr.csv, xml.csv, routing.csv, registry.csv, metrics.md, report.md, diff.xlsx
+docs/                  # architecture_v2.4.png, discrepancies.md, presentation_outline.md, video_storyboard.md
 ```
