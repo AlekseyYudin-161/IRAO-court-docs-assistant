@@ -4,7 +4,8 @@ work/tmp/
 # пробные прогоны                 
 out/examples/
 out/acts/
-out/xml_check/
+out/ui/
+out/*_check/
 *.log
 tmp/
 

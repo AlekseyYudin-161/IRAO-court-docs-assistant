@@ -13,12 +13,24 @@ from dotenv import load_dotenv
 from src.acts.to_doc import act_to_doc
 from src.core.columns import OCR_COLUMNS, XML_COLUMNS
 from src.core.contract import Doc, load
+from src.export.registry import update_registry
 from src.llm import client as llm_client
 from src.xmlbranch.to_doc import xml_to_doc
 
 load_dotenv()
 
 log = logging.getLogger("run")
+
+
+HOLDOUT = Path("data/courts_anonymized/holdout.txt")
+
+
+def holdout_ids() -> set[str]:
+    """doc_id из holdout.txt (строки без # и пустых)."""
+    if not HOLDOUT.exists():
+        return set()
+    return {ln.strip() for ln in HOLDOUT.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.startswith("#")}
 
 
 def collect_docs(docs_dir: Path) -> list[Doc]:
@@ -50,6 +62,7 @@ def run_one(path: str | Path, no_llm: bool = False) -> Doc:
         doc = xml_to_doc(p, use_llm=False if no_llm else None)
     else:
         raise NotImplementedError("ветки ещё не подключены — в UI используйте UI_FIXTURES=1 и fixtures/doc_*.json")
+    doc.extra["path"] = str(p.resolve())            # точный путь исходника — для вложения в письмо из UI
     doc.extra["no_llm"] = no_llm
     return route(doc)
 
@@ -126,14 +139,23 @@ def main() -> None:
     ap.add_argument("--no-llm", action="store_true")
     ap.add_argument("--holdout", action="store_true")
     a = ap.parse_args()
+
     if a.no_llm:
         llm_client.disable()
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     out = Path(a.out)
     docs = [route(d) for d in collect_docs(Path(a.docs))]
+
+    if a.holdout:
+        ids = holdout_ids()
+        docs = [d for d in docs if d.doc_id in ids]
+        log.info("hold-out: %d документов из %s", len(docs), HOLDOUT)
+
     export_tables(docs, out)
     write_report(docs, out)
     send_mail(docs, out)
+    update_registry(docs, out)
     (out / "run.json").write_text(json.dumps({"docs": len(docs), "no_llm": a.no_llm}, ensure_ascii=False), encoding="utf-8")
     log.info("готово: %s", out)
 

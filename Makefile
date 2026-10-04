@@ -6,6 +6,7 @@ PYTHON    ?= python3
 VENV_BIN   = $(VENV)/bin
 LLM_MODEL ?= qwen3:8b
 DOCS      ?= data
+PRED      ?= out
 ARGS      ?=
 
 ifeq ($(OS),Windows_NT)
@@ -22,7 +23,7 @@ help:
 	@echo "make test          - pytest"
 	@echo "make run-examples  - прогон на fixtures/ -> out/examples/ (без LLM: ARGS=--no-llm)"
 	@echo "make run-all       - прогон на DOCS=$(DOCS) -> out/"
-	@echo "make score         - сверка out/ с разметкой (src/eval)"
+	@echo "make score         - сверка PRED=$(PRED) с разметкой (src/eval)
 	@echo "make report        - отчёт ожидаемое vs извлечённое"
 	@echo "make ui            - Streamlit"
 	@echo "make clean         - удалить $(VENV), out/examples, work/"
@@ -46,10 +47,10 @@ run-all:
 	$(PY) run_examples.py --docs $(DOCS) --out out $(ARGS)
 
 score:
-	$(PY) -m src.eval.score --pred out --gold data/courts_anonymized/labels
+	$(PY) -m src.eval.score --pred $(PRED) --gold data/courts_anonymized/labels
 
 report:
-	$(PY) -m src.eval.report --pred out --gold data/courts_anonymized/labels
+	$(PY) -m src.eval.report --pred $(PRED) --gold data/courts_anonymized/labels
 
 ui:
 	$(PY) -m streamlit run src/ui/app.py
