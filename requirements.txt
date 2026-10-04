@@ -13,13 +13,11 @@ pytesseract==0.3.13
 opencv-python-headless==5.0.0.93   # deskew, Otsu; headless — без GUI-зависимостей, работает на VPS
 numpy==2.5.3
 pillow==12.3.0
-pymorphy2==0.9.1                    # TODO middle ML: шим на pymorphy3 (2.x падает на Python ≥ 3.11) или заменить
+pymorphy3==2.0.6
+pymorphy3-dicts-ru
 natasha==1.6.0
 yargy==0.16.0
-pdf2image==1.17.0                   # TODO middle ML: требует системный poppler; предпочтительно pymupdf, убрать после согласования
-pypdfium2==5.13.0                   # TODO middle ML: дубль pymupdf, убрать после согласования
-torch==2.11.0                       # TODO middle ML: назвать модель, которой нужен torch, иначе убрать (~2 ГБ на каждую установку)
-
+pypdfium2==5.13.0                   #
 # --- API-обёртка (middle ML, опционально; ядро работает без сервера) ---
 fastapi==0.142.2
 uvicorn==0.54.0

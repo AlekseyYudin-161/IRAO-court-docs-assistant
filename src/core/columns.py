@@ -1,6 +1,5 @@
 """Списки столбцов выходных таблиц — читаются из data/templates/, не редактировать руками."""
 
-from __future__ import annotations
 
 import csv
 from pathlib import Path

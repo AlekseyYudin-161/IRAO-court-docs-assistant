@@ -2,8 +2,6 @@
 """Проверка окружения перед запуском: Python, Tesseract (rus), Ollama и модель. Одинаково на macOS/Linux/Windows.
 Запуск: python scripts/check_env.py [--pull-model qwen3:8b]"""
 
-from __future__ import annotations
-
 import argparse
 import os
 import shutil

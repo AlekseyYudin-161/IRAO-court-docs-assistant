@@ -1,7 +1,6 @@
 """Фикстуры doc_*.json из строк разметки организаторов (method=gold).
 Запуск из корня репо: python scripts/make_fixtures.py"""
 
-from __future__ import annotations
 
 import csv
 import sys
