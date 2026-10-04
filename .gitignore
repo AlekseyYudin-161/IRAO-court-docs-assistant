@@ -5,6 +5,7 @@ work/tmp/
 out/examples/
 out/acts/
 out/ui/
+out/mail/
 out/*_check/
 *.log
 tmp/
