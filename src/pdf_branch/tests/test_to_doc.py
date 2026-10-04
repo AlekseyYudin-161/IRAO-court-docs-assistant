@@ -24,9 +24,32 @@ def test_to_money(value, expected):
     assert to_doc.to_money(value) == expected
 
 
+def test_to_inn():
+    assert to_doc.to_inn("123-456-789-012") == "123456789012"     # ИНН физлица — 12 цифр
+    assert to_doc.to_inn("8016874059") == ""                       # ИНН организации (взыскателя) не берём
+    assert to_doc.to_inn("нет") == ""
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("Макетнова Леонтия Степановича", "Макетнов Леонтий Степанович"),      # род. падеж, мужчина
+        ("Учебниковой Ксении Максимовны", "Учебникова Ксения Максимовна"),     # род. падеж, женщина
+        ("Бланкновой Злате Михайловне", "Бланкнова Злата Михайловна"),         # дат. падеж
+        ("Текстнова Маргарита Владимировна", "Текстнова Маргарита Владимировна"),  # уже именительный
+        ("Моделнов Денис Иванович", "Моделнов Денис Иванович"),
+        ("Иванов Иван", "Иванов Иван"),                                        # не ФИО из трёх слов — как есть
+    ],
+)
+def test_to_nominative(value, expected):
+    assert to_doc.to_nominative(value) == expected
+
+
 def test_normalize():
-    assert to_doc.normalize("инн", "123-456-789") == "123456789"
+    assert to_doc.normalize("инн", "123-456-789-012") == "123456789012"
+    assert to_doc.normalize("инн", "123-456-789") == ""
     assert to_doc.normalize("дата рождения", "11.03.1976") == "1976-03-11"
+    assert to_doc.normalize("фио", "Иванова Ивана Ивановича") == "Иванов Иван Иванович"
 
 
 def test_same_people():
@@ -36,29 +59,31 @@ def test_same_people():
 
 def test_fields_from_rules():
     fields = to_doc.fields_from_rules({
-        "fio": "Иванов Иван Иванович",
+        "fio": "Иванова Ивана Ивановича",
         "birth_date": "11.03.1976",
-        "inn": "123 456 789",
+        "inn": "123 456 789 012",
     })
 
     assert fields["фио"].value == "Иванов Иван Иванович"
+    assert fields["фио"].evidence == "Иванова Ивана Ивановича"      # цитата — как в тексте
     assert fields["фио"].method == "regex"
     assert fields["дата рождения"].value == "1976-03-11"
-    assert fields["инн"].value == "123456789"
+    assert fields["инн"].value == "123456789012"
     assert not fields["паспорт"].value
 
 
 def test_fix_derived():
+    """Соответчики по шаблону заказчика: все должники, включая основного; количество — их число."""
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
     fields["фио"] = to_doc.FieldValue(
         value="Иванов Иван Иванович",
-        evidence="Иванова Иван Ивановича",
+        evidence="Иванова Ивана Ивановича",
         confidence=0.6,
         method="llm",
     )
     fields["соответчики_фио"] = to_doc.FieldValue(
-        value="Иванов Иван Иванович; Петров Пётр Петрович",
-        evidence="Иванов Иван Иванович; Петров Пётр Петрович",
+        value="Иванова Ивана Ивановича; Петрова Петра Петровича",
+        evidence="Иванова Ивана Ивановича; Петрова Петра Петровича",
         confidence=0.6,
         method="llm",
     )
@@ -68,8 +93,8 @@ def test_fix_derived():
     assert fields["фамилия"].value == "Иванов"
     assert fields["имя"].value == "Иван"
     assert fields["отчетство"].value == "Иванович"
-    assert fields["соответчики_фио"].value == "Петров Пётр Петрович"
-    assert fields["соответчики_кол-во"].value == "1"
+    assert fields["соответчики_фио"].value == "Иванова Ивана Ивановича, Петрова Петра Петровича"
+    assert fields["соответчики_кол-во"].value == "2"
 
 
 def test_check_with_llm_disabled(monkeypatch):
@@ -112,25 +137,25 @@ def test_check_with_llm_detects_conflict(monkeypatch):
         to_doc.llm,
         "extract",
         lambda text, schema: {
-            "инн": {"value": "2222222222", "quote": "ИНН 2222222222"}
+            "инн": {"value": "222222222222", "quote": "ИНН 222222222222"}
         },
     )
 
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
     fields["инн"] = to_doc.FieldValue(
-        value="1111111111",
-        evidence="ИНН 1111111111",
+        value="111111111111",
+        evidence="ИНН 111111111111",
         confidence=0.9,
         method="regex",
     )
 
     conflicts = to_doc.check_with_llm(
         fields,
-        "ИНН 1111111111. Также встречается ИНН 2222222222.",
+        "ИНН 111111111111. Также встречается ИНН 222222222222.",
     )
 
     assert len(conflicts) == 1
-    assert fields["инн"].value == "1111111111"
+    assert fields["инн"].value == "111111111111"
     assert fields["инн"].confidence == 0.5
 
 
@@ -140,7 +165,7 @@ def test_check_with_llm_rejects_unverified_value(monkeypatch):
         to_doc.llm,
         "extract",
         lambda text, schema: {
-            "инн": {"value": "9999999999", "quote": "несуществующая цитата"}
+            "инн": {"value": "999999999999", "quote": "несуществующая цитата"}
         },
     )
 
@@ -161,15 +186,18 @@ def test_find_pdf(tmp_path):
 
 
 def test_pdf_to_doc_fssp_by_xml(tmp_path):
-    pdf = tmp_path / "ocr_001.pdf"
+    """PDF-двойник постановления ФССП не обрабатываем: его берёт XML-ветка, иначе два Doc с одним doc_id."""
+    pdf = tmp_path / "fssp_001.pdf"
     pdf.touch()
     pdf.with_suffix(".xml").touch()
 
-    doc = to_doc.pdf_to_doc(pdf, tmp_path)
+    assert to_doc.pdf_to_doc(pdf, tmp_path) is None
 
-    assert doc.table == "xml"
-    assert doc.doc_type == "постановление ФССП"
-    assert doc.extra["twin"] == "ocr_001.xml"
+
+def test_fssp_pdf_re():
+    assert to_doc.FSSP_PDF_RE.search("Вид документа: O_IP_ACT_END_END")
+    # фраза есть в любом исполнительном листе — признаком ФССП быть не должна
+    assert not to_doc.FSSP_PDF_RE.search("Исполнительный лист. Судебный пристав-исполнитель обязан…")
 
 
 def test_pdf_to_doc_skips_llm_when_disabled(monkeypatch, tmp_path):
@@ -212,14 +240,18 @@ def test_pdf_to_doc_skips_llm_when_disabled(monkeypatch, tmp_path):
     assert doc.doc_type == "приказ эл"
     assert doc.timings_ms["llm"] == 0
 
+
 def test_to_date_ignores_extra_text():
     assert to_doc.to_date("дата рождения: 11.03.1976") == "1976-03-11"
+
 
 def test_to_money_integer():
     assert to_doc.to_money("1000 руб.") == "1000.00"
 
+
 def test_normalize_default():
     assert to_doc.normalize("паспорт", 123456) == "123456"
+
 
 def test_fields_from_rules_list():
     fields = to_doc.fields_from_rules({
@@ -227,15 +259,7 @@ def test_fields_from_rules_list():
     })
 
     assert fields["соответчики_фио"].value == "Иванов Иван; Петров Пётр"
-def test_fix_derived_invalid_fio():
-    fields = {col: to_doc.empty() for col in OCR_FIELDS}
-    fields["фио"] = to_doc.FieldValue(value="Иванов Иван")
 
-    to_doc.fix_derived(fields)
-
-    assert not fields["фамилия"].value
-    assert not fields["имя"].value
-    assert not fields["отчетство"].value
 
 def test_as_text():
     assert to_doc.as_text(["Иванов", "Петров"]) == "Иванов; Петров"
@@ -306,15 +330,15 @@ def test_llm_accepts_value_without_quote(monkeypatch):
     monkeypatch.setattr(
         to_doc.llm, "extract",
         lambda *_: {
-            "инн": {"value": "1234567890", "quote": ""}
+            "инн": {"value": "123456789012", "quote": ""}
         },
     )
 
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
 
-    to_doc.check_with_llm(fields, "ИНН: 1234567890")
+    to_doc.check_with_llm(fields, "ИНН: 123456789012")
 
-    assert fields["инн"].value == "1234567890"
+    assert fields["инн"].value == "123456789012"
 
 
 def test_llm_rejects_value_not_in_text(monkeypatch):
@@ -322,7 +346,7 @@ def test_llm_rejects_value_not_in_text(monkeypatch):
     monkeypatch.setattr(
         to_doc.llm, "extract",
         lambda *_: {
-            "инн": {"value": "1234567890", "quote": "ИНН 1234567890"}
+            "инн": {"value": "123456789012", "quote": "ИНН 123456789012"}
         },
     )
 
@@ -352,52 +376,55 @@ def test_llm_agrees_with_rule(monkeypatch):
         to_doc.llm, "extract",
         lambda *_: {
             "инн": {
-                "value": "1234567890",
-                "quote": "ИНН 1234567890",
+                "value": "123456789012",
+                "quote": "ИНН 123456789012",
             }
         },
     )
 
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
     fields["инн"] = to_doc.FieldValue(
-        value="1234567890",
-        evidence="ИНН 1234567890",
+        value="123456789012",
+        evidence="ИНН 123456789012",
         confidence=0.9,
         method="regex",
     )
 
-    conflicts = to_doc.check_with_llm(fields, "ИНН 1234567890")
+    conflicts = to_doc.check_with_llm(fields, "ИНН 123456789012")
 
     assert conflicts == []
-    assert fields["инн"].value == "1234567890"
+    assert fields["инн"].value == "123456789012"
     assert fields["инн"].confidence == 0.95
     assert fields["инн"].method == "regex"
 
 
-def test_llm_overrides_fio(monkeypatch):
+def test_llm_does_not_override_fio(monkeypatch):
+    """regex_first: значение правил главное, расхождение с LLM — в конфликты и confidence 0.5."""
     monkeypatch.setattr(to_doc.llm, "enabled", lambda: True)
     monkeypatch.setattr(
         to_doc.llm, "extract",
         lambda *_: {
             "фио": {
-                "value": "Иванов Иван Иванович",
-                "quote": "Иванов Иван Иванович",
+                "value": "Петров Пётр Петрович",
+                "quote": "Петров Пётр Петрович",
             }
         },
     )
 
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
     fields["фио"] = to_doc.FieldValue(
-        value="Иванова Ивана Ивановича",
+        value="Иванов Иван Иванович",
         evidence="Иванова Ивана Ивановича",
         confidence=0.9,
         method="regex",
     )
 
-    to_doc.check_with_llm(fields, "Иванов Иван Иванович")
+    conflicts = to_doc.check_with_llm(fields, "Иванова Ивана Ивановича и Петров Пётр Петрович")
 
+    assert len(conflicts) == 1
     assert fields["фио"].value == "Иванов Иван Иванович"
-    assert fields["фио"].method == "llm"
+    assert fields["фио"].method == "regex"
+    assert fields["фио"].confidence == 0.5
 
 
 def test_fix_derived_without_fio():
@@ -408,6 +435,8 @@ def test_fix_derived_without_fio():
     assert not fields["фамилия"].value
     assert not fields["имя"].value
     assert not fields["отчетство"].value
+    assert not fields["соответчики_фио"].value
+    assert not fields["соответчики_кол-во"].value
 
 
 def test_fix_derived_invalid_fio():
@@ -421,44 +450,43 @@ def test_fix_derived_invalid_fio():
     assert not fields["отчетство"].value
 
 
-def test_fix_derived_removes_main_debtor():
+def test_fix_derived_single_debtor():
+    """Один должник: он же в списке соответчиков как в тексте, количество 1 (так в разметке заказчика)."""
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
-    fields["фио"] = to_doc.FieldValue(value="Иванов Иван Иванович")
-    fields["соответчики_фио"] = to_doc.FieldValue(
-        value="Иванов Иван Иванович"
-    )
+    fields["фио"] = to_doc.FieldValue(value="Иванов Иван Иванович", evidence="Иванова Ивана Ивановича")
 
     to_doc.fix_derived(fields)
 
-    assert fields["соответчики_фио"].value == ""
-    assert fields["соответчики_кол-во"].value == ""
+    assert fields["соответчики_фио"].value == "Иванова Ивана Ивановича"
+    assert fields["соответчики_кол-во"].value == "1"
+    assert fields["соответчики_кол-во"].method == "derived"
 
 
-def test_fix_derived_two_co_debtors():
+def test_fix_derived_three_debtors():
     fields = {col: to_doc.empty() for col in OCR_FIELDS}
     fields["фио"] = to_doc.FieldValue(value="Иванов Иван Иванович")
     fields["соответчики_фио"] = to_doc.FieldValue(
-        value="Иванов Иван Иванович; Петров Пётр Петрович; Сидоров Сидор Сидорович"
+        value="Иванов Иван Иванович; Петров Пётр Петрович; Сидоров Сидор Сидорович; Петров Пётр Петрович"
     )
 
     to_doc.fix_derived(fields)
 
     assert fields["соответчики_фио"].value == (
-        "Петров Пётр Петрович; Сидоров Сидор Сидорович"
+        "Иванов Иван Иванович, Петров Пётр Петрович, Сидоров Сидор Сидорович"   # дубли убраны
     )
-    assert fields["соответчики_кол-во"].value == "2"
+    assert fields["соответчики_кол-во"].value == "3"
 
 
 def test_fssp_doc():
     from pathlib import Path
 
-    doc = to_doc.fssp_doc(Path("ocr_001.pdf"), "ocr/orders/ocr_001.pdf")
+    doc = to_doc.fssp_doc(Path("fssp_099.pdf"), "fssp/fssp_099.pdf")
 
-    assert doc.doc_id == "ocr_001"
+    assert doc.doc_id == "fssp_099"
     assert doc.source_type == "pdf"
     assert doc.table == "xml"
     assert doc.doc_type == "постановление ФССП"
-    assert doc.extra["twin"] == "ocr_001.xml"
+    assert doc.route.review.flags == ["REQUIRED_FIELD_MISSING"]
     assert set(doc.fields) == set(to_doc.XML_FIELDS)
 
 
@@ -530,5 +558,4 @@ def test_pdf_to_doc_scan(monkeypatch, tmp_path):
 
     assert doc.doc_type == "приказ"
     assert doc.timings_ms["llm"] == 0
-
-
+    assert doc.route.review.flags == []

@@ -6,7 +6,8 @@ from src.core.contract import load
 from src.export.mailer import build_message, send_for_doc
 
 
-def test_l2_letter_short_with_case_and_quote(tmp_path: Path):
+def test_l2_letter_short_with_case_and_quote(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("SMTP_HOST", raising=False)       # письмо только в .eml, без реальной отправки
     doc = load("fixtures/doc_fssp_001.json")
     msg = build_message(doc, "a@b.c", "x@y.z")
     text = msg.get_body(preferencelist=("plain",)).get_content()
