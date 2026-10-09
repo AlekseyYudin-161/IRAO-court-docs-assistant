@@ -191,7 +191,7 @@ docs/                  # architecture_v2.4.png, discrepancies.md, presentation_o
 
 ![Python](https://img.shields.io/badge/Python_3.12-FFFFFF?style=for-the-badge&logo=python&logoColor=306998&color=000000)
 ![Streamlit](https://img.shields.io/badge/Streamlit_1.64.0-FFFFFF?style=for-the-badge&logo=streamlit&logoColor=FF4B4B&color=000000)
-![Opencv-python-headless](https://img.shields.io/badge/Opencv-python-headless_5.0.0.93-FFFFFF?style=for-the-badge&logo=opencv-python-headless&logoColor=FF4B4B&color=000000)
+![Opencv-python-headless](https://img.shields.io/badge/Opencv-python_5.0.0.93-FFFFFF?style=for-the-badge&logo=opencv-python&logoColor=FF4B4B&color=000000)
 ![Pytesseract](https://img.shields.io/badge/pytesseract_0.3.13-FFFFFF?style=for-the-badge&logo=pytesseract&logoColor=FF4B4B&color=000000)
 ![FastApi](https://img.shields.io/badge/fastapi_0.142.2-FFFFFF?style=for-the-badge&logo=fastapi&logoColor=FF4B4B&color=000000)
 
