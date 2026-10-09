@@ -186,3 +186,21 @@ data/                  # courts_anonymized/ (fssp, ocr, labels, templates, holdo
 out/                   # результаты полного прогона: ocr.csv, xml.csv, routing.csv, registry.csv, metrics.md, report.md, diff.xlsx
 docs/                  # architecture_v2.4.png, discrepancies.md, presentation_outline.md, video_storyboard.md
 ```
+
+## Технологии проекта
+
+![Python](https://img.shields.io/badge/Python_3.12-FFFFFF?style=for-the-badge&logo=python&logoColor=306998&color=000000)
+![Streamlit](https://img.shields.io/badge/Streamlit_1.64.0-FFFFFF?style=for-the-badge&logo=streamlit&logoColor=FF4B4B&color=000000)
+![Opencv-python-headless](https://img.shields.io/badge/Opencv-python-headless_5.0.0.93-FFFFFF?style=for-the-badge&logo=opencv-python-headless&logoColor=FF4B4B&color=000000)
+![Pytesseract](https://img.shields.io/badge/pytesseract_0.3.13-FFFFFF?style=for-the-badge&logo=pytesseract&logoColor=FF4B4B&color=000000)
+![FastApi](https://img.shields.io/badge/fastapi_0.142.2-FFFFFF?style=for-the-badge&logo=fastapi&logoColor=FF4B4B&color=000000)
+
+
+![Pandas](https://img.shields.io/badge/Pandas_2.3.3-FFFFFF?style=for-the-badge&logo=pandas&logoColor=306998&color=000000)
+![Numpy](https://img.shields.io/badge/Numpy_2.5.3-FFFFFF?style=for-the-badge&logo=numpy&logoColor=306998&color=000000)
+![Lxml](https://img.shields.io/badge/Lxml_6.1.3-FFFFFF?style=for-the-badge&logo=lxml&logoColor=306998&color=000000)
+
+![OpenAI](https://img.shields.io/badge/openai_3.22.1-FFFFFF?style=for-the-badge&logo=openai&logoColor=306998&color=000000)
+
+![Pylint](https://img.shields.io/badge/Pylint_3.3.5-FFFFFF?style=for-the-badge&logo=Pylint&logoColor=306998&color=000000)
+![Pytest](https://img.shields.io/badge/Pytest_9.1.1-FFFFFF?style=for-the-badge&logo=pytest&logoColor=306998&color=000000)
